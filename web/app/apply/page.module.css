@@ -1,0 +1,366 @@
+.main {
+  padding: 48px 0 96px;
+}
+
+.wrap {
+  max-width: 760px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.lead {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.note {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.fieldset {
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 22px 22px 24px;
+  background: var(--card-bg);
+}
+
+.legend {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-highlight);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 8px;
+}
+
+.req {
+  color: var(--color-primary);
+  margin-left: 4px;
+}
+
+.helper {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 8px 0 16px;
+  line-height: 1.55;
+}
+
+.legendHint {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.subLegend {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 12px 0 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--card-border);
+}
+
+.fieldsetBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.04em;
+}
+
+.input {
+  appearance: none;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+/* Program radio groups */
+.programGroup {
+  border-top: 1px solid var(--card-border);
+  padding-top: 14px;
+}
+
+.programGroup:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.programGroupTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.programList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.programLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--t-quick), border-color var(--t-quick);
+}
+
+.programLabel:hover {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.programLabel:has(input:checked) {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.programLabel input[type="radio"] {
+  margin-top: 4px;
+  accent-color: var(--color-primary);
+}
+
+.programLabel span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.programTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.programSubtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Tool / days check grids */
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-main);
+  transition: background-color var(--t-quick), border-color var(--t-quick);
+}
+
+.checkLabel:has(input:checked) {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.checkLabel input {
+  accent-color: var(--color-primary);
+}
+
+.dayGrid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dayLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  transition: background-color var(--t-quick), border-color var(--t-quick);
+  position: relative;
+}
+
+.dayLabel input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+}
+
+.dayLabel:has(input:checked) {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+/* Expectation options (long text) */
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.55;
+  transition: background-color var(--t-quick), border-color var(--t-quick);
+}
+
+.optionLabel:has(input:checked) {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.optionLabel > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optionSource {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-highlight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.optionLabel input {
+  margin-top: 4px;
+  accent-color: var(--color-primary);
+}
+
+/* Level-check hint */
+.levelCheckHint {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-secondary) 6%, transparent);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.levelCheckPending {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Submit + error */
+.submit {
+  margin-top: 4px;
+  align-self: flex-start;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: 1px solid var(--color-primary);
+  transition: opacity var(--t-quick);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.formError {
+  color: #c33;
+  font-size: 14px;
+}
+
+/* Success view */
+.success {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.success h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.successNote {
+  font-size: 14px;
+  color: var(--text-muted);
+}

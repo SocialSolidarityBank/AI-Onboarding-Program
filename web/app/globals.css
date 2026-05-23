@@ -1,0 +1,86 @@
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS (1차 - design_sample.html 기반)
+   정확한 토큰 값은 Phase D 에서 Figma 동기 후 교체
+   ═══════════════════════════════════════════ */
+:root {
+  /* Strictly Limited Palette (5 Colors Only) */
+  --color-primary: #006cb7;
+  --color-secondary: #7b7875;
+  --color-white: #ffffff;
+  --color-bg-dark: #26257c;
+  --color-accent: #58c5ff;
+
+  /* Theme Semantic Tokens — light (단일 테마) */
+  --bg: var(--color-white);
+  --card-bg: var(--color-white);
+  --card-border: rgba(123, 120, 117, 0.25);
+  --text-main: var(--color-bg-dark);
+  --text-muted: var(--color-secondary);
+  --text-highlight: var(--color-primary);
+  --shadow: rgba(38, 37, 124, 0.08);
+  --border-accent: var(--color-primary);
+
+  /* Typography */
+  --font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-size-body: 18px;
+  --font-size-caption: 15px;
+
+  /* Layout & motion */
+  --content-max: 1180px;
+  --t-smooth: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  --t-quick: 0.2s ease;
+}
+
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg);
+  font-family: var(--font-family);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--t-smooth), color var(--t-smooth);
+}
+
+body {
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--text-highlight);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Utility container */
+.container {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
+  }
+}

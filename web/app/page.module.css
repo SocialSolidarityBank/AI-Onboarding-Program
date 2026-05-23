@@ -1,0 +1,500 @@
+/* ─────────── Hero ─────────── */
+.hero {
+  padding: 96px 0 80px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.heroInner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.heroEyebrow {
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  max-width: 24ch;
+}
+
+.heroLead {
+  font-size: 19px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 64ch;
+}
+
+.heroNote {
+  margin-top: 8px;
+  font-size: var(--font-size-caption);
+  color: var(--text-highlight);
+  font-weight: 700;
+}
+
+/* ─────────── Section base ─────────── */
+.section {
+  padding: 88px 0 72px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.sectionTitle {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin-bottom: 12px;
+}
+
+.subsectionTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 48px 0 16px;
+}
+
+.sectionLead {
+  font-size: 17px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+
+.sectionNote {
+  margin-top: 6px;
+  font-size: var(--font-size-caption);
+  color: var(--text-highlight);
+  font-weight: 700;
+}
+
+/* ─────────── 전체 교육 카드 ─────────── */
+.cardGrid {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTitle {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.cardSubtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: -6px;
+}
+
+.cardBody {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.cardBody ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardBody li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.cardBody li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--text-highlight);
+  font-weight: 800;
+}
+
+.cardBody p {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 960px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────── 비교 카드 그리드 ─────────── */
+.compareGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .compareGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compareCard {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.compareCardHeader {
+  padding: 16px 18px;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.compareCardTitle {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.compareCardBody {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.compareCardRow {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.compareCardRow:last-child {
+  border-bottom: none;
+}
+
+.compareCardRow dt {
+  font-weight: 800;
+  color: var(--text-highlight);
+}
+
+.compareCardRow dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.compareList {
+  list-style: decimal inside;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ─────────── 스터디 상세 카드 ─────────── */
+.studyDetailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 8px;
+}
+
+.studyCard {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.studyHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.studyEyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.studyTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.studyLead {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.studyBody {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.studyBody ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.studyBody li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.studyBody li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--text-highlight);
+  font-weight: 800;
+}
+
+.studyMeta h5 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-highlight);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.studyMeta ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.studyMeta strong {
+  color: var(--text-main);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.sessionsTableWrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+}
+
+.sessionsTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.sessionsTable th,
+.sessionsTable td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 14px;
+  vertical-align: top;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.sessionsTable thead th {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--text-main);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sessionsTable td:first-child,
+.sessionsTable th:first-child {
+  width: 56px;
+  text-align: center;
+}
+
+.sessionsTable td:nth-child(2),
+.sessionsTable th:nth-child(2) {
+  width: 100px;
+  white-space: nowrap;
+}
+
+.sessionsTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ─────────── 퍼실리테이터 ─────────── */
+.facGrid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.facCard {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 28px 24px;
+}
+
+.facCard h4 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-highlight);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.facCard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.facCard li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.facCard li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--text-highlight);
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .facGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────── 신청 CTA ─────────── */
+.applySection {
+  padding: 96px 0;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.applyInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.applyTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.applyLead {
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.applyLeadList {
+  list-style: disc inside;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 60ch;
+  line-height: 1.6;
+}
+
+.applyLeadList li {
+  text-align: left;
+}
+
+.applyHint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.applyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: 1px solid var(--color-primary);
+  text-decoration: none;
+  transition: opacity var(--t-quick), transform var(--t-quick);
+}
+
+.applyButton:hover {
+  text-decoration: none;
+  opacity: 0.92;
+}
+
+/* ─────────── Footer ─────────── */
+.footer {
+  padding: 32px 0 48px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+}

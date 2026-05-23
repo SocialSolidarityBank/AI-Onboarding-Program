@@ -1,3 +1,6 @@
 .DS_Store
 .omc/
 *.swp
+
+# CodeGraph local index — auto-rebuildable via `codegraph sync`
+.codegraph/

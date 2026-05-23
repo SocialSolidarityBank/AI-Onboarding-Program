@@ -1,0 +1,57 @@
+.main {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.box {
+  max-width: 480px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 36px 32px;
+  box-shadow: 0 8px 32px var(--shadow);
+  text-align: center;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 12px;
+}
+
+.message {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.detail {
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.8;
+  margin-bottom: 16px;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  transition: opacity var(--t-quick);
+}
+
+.cta:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
