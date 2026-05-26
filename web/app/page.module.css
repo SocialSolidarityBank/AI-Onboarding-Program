@@ -306,6 +306,13 @@
   font-weight: 800;
 }
 
+/* h5 와 다음 h5 사이 (= .studyMeta sibling 사이) 가로선
+ * 카드의 외곽 마진은 침범하지 않고 안쪽 padding-top 위에 그림 */
+.studyMeta + .studyMeta {
+  border-top: 1px solid var(--card-border);
+  padding-top: 20px;
+}
+
 .studyMeta h5 {
   font-size: 16px;
   font-weight: 800;
