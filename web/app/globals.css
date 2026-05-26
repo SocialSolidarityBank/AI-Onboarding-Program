@@ -1,32 +1,32 @@
-/* ═══════════════════════════════════════════
-   DESIGN TOKENS (1차 - design_sample.html 기반)
-   정확한 토큰 값은 Phase D 에서 Figma 동기 후 교체
-   ═══════════════════════════════════════════ */
+/* v2 디자인 토큰 (컬러·폰트) 만 alias 로 적용
+ * — utility class (bg-*, t-*, card 등) 는 도입하지 않음
+ * — 호출처 (page.module.css 등) 의 var(--color-*), var(--text-*), var(--card-*) 식별자는 그대로 유지
+ *   값만 v2 토큰의 alias 가 되어 시각 톤이 v2 와 정렬
+ * — v2 source: web/app/_v2/tokens.css */
 :root {
-  /* Strictly Limited Palette (5 Colors Only) */
-  --color-primary: #006cb7;
-  --color-secondary: #7b7875;
-  --color-white: #ffffff;
-  --color-bg-dark: #26257c;
-  --color-accent: #58c5ff;
+  /* 5색 팔레트 — v2 와 hex 동일 (시각 변화 0) */
+  --color-primary: var(--c-primary);
+  --color-secondary: var(--c-grey);
+  --color-white: var(--c-canvas);
+  --color-bg-dark: var(--c-dark-blue);
+  --color-accent: var(--c-sky);
 
-  /* Theme Semantic Tokens — light (단일 테마) */
-  --bg: var(--color-white);
-  --card-bg: var(--color-white);
-  --card-border: rgba(123, 120, 117, 0.25);
-  --text-main: var(--color-bg-dark);
-  --text-muted: var(--color-secondary);
-  --text-highlight: var(--color-primary);
-  --shadow: rgba(38, 37, 124, 0.08);
-  --border-accent: var(--color-primary);
+  /* Theme Semantic — v2 alias (제목/본문/라인 톤이 v2 로 정렬됨) */
+  --bg: var(--c-canvas);
+  --card-bg: var(--c-canvas);
+  --card-border: var(--c-line-soft);
+  --text-main: var(--c-ink-deep);
+  --text-muted: var(--c-body);
+  --text-highlight: var(--c-primary);
+  --shadow: var(--sh-soft);
+  --border-accent: var(--c-primary);
 
-  /* Typography */
-  --font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
-    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  --font-size-body: 18px;
-  --font-size-caption: 15px;
+  /* Typography — v2 폰트 패밀리 + body/caption 크기 */
+  --font-family: var(--ff);
+  --font-size-body: var(--fs-body);   /* 18px */
+  --font-size-caption: var(--fs-caption); /* 16px — v2 의 ≥16px 규칙 */
 
-  /* Layout & motion */
+  /* Layout & motion — 자체 유지 (v2 미정의) */
   --content-max: 1180px;
   --t-smooth: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   --t-quick: 0.2s ease;
@@ -54,7 +54,7 @@ body {
 body {
   font-size: var(--font-size-body);
   line-height: 1.6;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking); /* v2: -0.01em */
 }
 
 a {
