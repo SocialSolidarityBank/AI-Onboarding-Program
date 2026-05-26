@@ -175,11 +175,11 @@
 
 .programLabel {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid transparent;
+  border: 1px solid var(--card-border);
   cursor: pointer;
   transition: background-color var(--t-quick), border-color var(--t-quick);
 }
@@ -193,9 +193,11 @@
   border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
-.programLabel input[type="radio"] {
-  margin-top: 4px;
+.programLabel input[type="radio"],
+.programLabel input[type="checkbox"] {
+  margin: 0;
   accent-color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .programLabel span {
@@ -289,7 +291,7 @@
 
 .optionLabel {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 12px 14px;
   border-radius: 10px;
@@ -322,8 +324,9 @@
 }
 
 .optionLabel input {
-  margin-top: 4px;
+  margin: 0;
   accent-color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 /* Level-check hint */
