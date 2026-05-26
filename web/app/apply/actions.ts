@@ -6,6 +6,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { isAllowedEmail } from "@/lib/constants";
 import { sendSubmissionConfirmation } from "@/lib/email";
 import { getProgramById } from "@/lib/programs";
+import { syncApplicationsToNotion, type SyncRow } from "@/lib/notion";
 
 export type ApplyFormState =
   | { kind: "idle" }
@@ -68,7 +69,7 @@ export async function submitApplication(
     .eq("email", user.email)
     .maybeSingle();
 
-  const { error } = await supabase
+  const { data: upserted, error } = await supabase
     .from("applications")
     .upsert(
       {
@@ -84,7 +85,7 @@ export async function submitApplication(
       },
       { onConflict: "email" }
     )
-    .select("id")
+    .select("id, created_at")
     .single();
 
   if (error) {
@@ -120,6 +121,33 @@ export async function submitApplication(
       });
     } catch (err) {
       console.error("[apply] confirmation mail dispatch failed", err);
+    }
+  });
+
+  // Notion 단방향 mirror — 실패해도 신청 자체는 성공 처리 (best-effort)
+  after(async () => {
+    try {
+      const row: SyncRow = {
+        id: upserted?.id ?? "",
+        email: recipient,
+        name,
+        team,
+        programTitles,
+        tools,
+        toolsOther,
+        expectations,
+        availableDays,
+        learningGoals,
+        createdAt: upserted?.created_at ?? new Date().toISOString(),
+      };
+      const result = await syncApplicationsToNotion([row]);
+      if (result.kind === "error") {
+        console.error("[apply] notion sync error:", result.message);
+      } else if (result.failed > 0) {
+        console.error("[apply] notion sync partial failures:", result.errors);
+      }
+    } catch (err) {
+      console.error("[apply] notion sync failed", err);
     }
   });
 
