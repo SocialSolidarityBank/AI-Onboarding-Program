@@ -1,0 +1,132 @@
+/* ============================================================
+ * BSS Design System · tokens.css
+ * Source of truth: Design System.html (v6)
+ * 함께만드는세상 — 사회연대은행 부설
+ * ============================================================ */
+
+:root {
+  /* ---------- Colors ---------- */
+  /* Brand primary */
+  --c-primary:        #006CB7;
+  --c-primary-active: #338BC9;
+
+  /* Brand secondary (dark blue) */
+  --c-dark-blue:        #26257C;
+  --c-dark-blue-active: #3D3CA0;
+
+  /* Sky accent — used for callouts on dark BGs */
+  --c-sky:       #58C5FF;
+  --c-sky-light: #CDEAFF;
+
+  /* Neutrals */
+  --c-ink-deep:   #0A1E33;  /* deepest text + dark section BG */
+  --c-ink:        #1A1B1F;  /* body ink (rare) */
+  --c-body:       #454745;  /* default body text */
+  --c-grey:       #7B7875;  /* secondary text, captions */
+  --c-light-grey: #ECF0F3;  /* light section BG, input fill */
+  --c-canvas:     #FFFFFF;  /* default page BG */
+
+  /* Semantic */
+  --c-positive: #00A775;
+  --c-warning:  #FAA41A;
+  --c-negative: #F16A26;
+
+  /* ---------- Typography ---------- */
+  --ff:    "Pretendard Variable", Pretendard, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --ff-en: "Satoshi", "Pretendard Variable", system-ui, sans-serif;
+
+  /* Type scale (size / weight / line-height) — apply via utility classes below */
+  --fs-h1: 64px; --fw-h1: 800; --lh-h1: 1.15;
+  --fs-h2: 56px; --fw-h2: 700; --lh-h2: 1.18;
+  --fs-h3: 40px; --fw-h3: 700; --lh-h3: 1.25;
+  --fs-h4: 27px; --fw-h4: 700; --lh-h4: 1.35;
+  --fs-body: 18px;        --fw-body: 400;        --lh-body: 1.7;
+  --fs-body-strong: 18px; --fw-body-strong: 600; --lh-body-strong: 1.7;
+  --fs-caption: 16px;     --fw-caption: 400;     --lh-caption: 1.6;
+  --fs-button: 16px;      --fw-button: 600;      --lh-button: 1.5;
+
+  /* Tracking — Korean/English unified */
+  --tracking: -0.01em;
+
+  /* ---------- Spacing ---------- */
+  --sp-xs:  4px;
+  --sp-sm:  8px;
+  --sp-md:  12px;
+  --sp-lg:  16px;
+  --sp-xl:  24px;
+  --sp-2xl: 32px;
+  --sp-3xl: 48px;
+  --sp-4xl: 64px;
+  --sp-5xl: 96px;
+  --sp-6xl: 128px;
+  --sp-7xl: 160px;
+
+  /* ---------- Radius ---------- */
+  --r-md:   12px;
+  --r-lg:   16px;
+  --r-xl:   24px;
+  --r-2xl:  32px;
+  --r-pill: 9999px;
+
+  /* ---------- Elevation (soft-first) ---------- */
+  --sh-soft: 0 1px 3px rgba(10,30,51,0.04);
+  --sh-hero: 0 2px 8px rgba(10,30,51,0.04), 0 8px 24px rgba(10,30,51,0.06);
+  --sh-full: 0 4px 16px rgba(10,30,51,0.08);
+
+  /* ---------- Lines (Wise-inspired) ----------
+   * Two weights:
+   *   hairline = section / accordion / divider — 1px @ 12%
+   *   outline  = input / selectable card — 1px subtle default, ink-deep on hover, primary on focus
+   *              Hover/focus thickness comes from inset 1px shadow (no layout shift).
+   */
+  --c-line-soft:    rgba(10,30,51,0.12);   /* hairline divider */
+  --c-line-default: rgba(10,30,51,0.20);   /* input / card outline (default) */
+  --c-line-hover:   var(--c-ink-deep);      /* input / card outline (hover) */
+  --c-line-focus:   var(--c-primary);       /* input outline (focus) */
+
+  --c-line-default-inverted: rgba(255,255,255,0.40);
+  --c-line-hover-inverted:   rgba(255,255,255,0.95);
+  --c-line-focus-inverted:   var(--c-sky);
+
+  /* ---------- Gradients (LIGHT × LIGHT only — hero wash) ----------
+   * Forbidden: gradients between primary / dark-blue / ink-deep.
+   * If you need depth on dark BG, use solid + elevation. */
+  --gr-wash-soft: linear-gradient(180deg, #FFFFFF 0%, #ECF0F3 100%);
+  --gr-wash-sky:  linear-gradient(180deg, #FFFFFF 0%, #CDEAFF 100%);
+  --gr-wash-cool: linear-gradient(180deg, #ECF0F3 0%, #CDEAFF 100%);
+  --gr-wash-diag: linear-gradient(135deg, #FFFFFF 0%, #CDEAFF 100%);
+}
+
+/* ============================================================
+ * Base — italic forbidden, body defaults
+ * ============================================================ */
+
+html, body {
+  margin: 0;
+  font-family: var(--ff);
+  color: var(--c-body);
+  background: var(--c-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+
+/* System rule: italic forbidden. Emphasis via weight or color. */
+em, i { font-style: normal; }
+
+/* ============================================================
+ * Typography utility classes
+ * Use these instead of inline font sizes.
+ * ============================================================ */
+
+.t-h1 { font: var(--fw-h1) var(--fs-h1)/var(--lh-h1) var(--ff); letter-spacing: var(--tracking); color: var(--c-ink-deep); }
+.t-h2 { font: var(--fw-h2) var(--fs-h2)/var(--lh-h2) var(--ff); letter-spacing: var(--tracking); color: var(--c-ink-deep); }
+.t-h3 { font: var(--fw-h3) var(--fs-h3)/var(--lh-h3) var(--ff); letter-spacing: var(--tracking); color: var(--c-ink-deep); }
+.t-h4 { font: var(--fw-h4) var(--fs-h4)/var(--lh-h4) var(--ff); letter-spacing: var(--tracking); color: var(--c-ink-deep); }
+
+.t-body         { font: var(--fw-body)        var(--fs-body)/var(--lh-body)               var(--ff); letter-spacing: var(--tracking); color: var(--c-body); }
+.t-body-strong  { font: var(--fw-body-strong) var(--fs-body-strong)/var(--lh-body-strong) var(--ff); letter-spacing: var(--tracking); color: var(--c-ink-deep); }
+.t-caption      { font: var(--fw-caption)     var(--fs-caption)/var(--lh-caption)         var(--ff); letter-spacing: var(--tracking); color: var(--c-grey); }
+.t-button       { font: var(--fw-button)      var(--fs-button)/var(--lh-button)           var(--ff); letter-spacing: var(--tracking); }
+
+/* English-leaning text — use Satoshi via var(--ff-en) */
+.t-en { font-family: var(--ff-en); }
