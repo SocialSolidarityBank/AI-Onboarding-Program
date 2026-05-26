@@ -43,9 +43,16 @@ export default async function ApplyPage() {
       <div className={`container ${styles.wrap}`}>
         <header className={styles.header}>
           <h1 className={styles.title}>AI 교육 · 스터디 신청</h1>
-          <p className={styles.lead}>
-            로그인 계정: <strong>{user.email}</strong>
-          </p>
+          <div className={styles.accountRow}>
+            <p className={styles.lead}>
+              로그인 계정: <strong>{user.email}</strong>
+            </p>
+            <form action="/auth/signout" method="post">
+              <button type="submit" className={styles.signOutBtn}>
+                로그아웃
+              </button>
+            </form>
+          </div>
           {existing ? (
             <p className={styles.note}>
               이전 신청 내역을 불러왔습니다. 수정이 필요한 경우 내용을 바꾸고 다시 제출해 주세요.

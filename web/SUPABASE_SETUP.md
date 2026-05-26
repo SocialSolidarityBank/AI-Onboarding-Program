@@ -1,6 +1,6 @@
 # Supabase 운영자 셋업 가이드
 
-> **Doc version**: v2 · **Updated**: 2026-05-23
+> **Doc version**: v3 · **Updated**: 2026-05-25
 > **기준 콘솔**: Supabase Dashboard 2026-05 (메뉴 트리 `Auth > ...`)
 > **대상 코드 베이스**: `/web` (Next.js 16 App Router, `@supabase/ssr`)
 
@@ -113,13 +113,14 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ## 4. Auth 설정
 
-### 4-1. Email 프로바이더 (Magic Link)
+### 4-1. Email 프로바이더 (Magic Link + OTP 코드)
 **Auth → Sign In / Up → Email** (옛 메뉴: `Auth > Providers > Email`)
 
 - **Enable Email provider**: ON (기본)
 - **Enable Email signups**: ON ← 신청 페이지는 첫 방문자가 자동 가입되어야 동작
 - **Confirm email**: ON 권장 (사용자가 메일을 실제 받을 수 있어야 함)
 - **Enable Magic Link / Sign in with OTP**: ON ← 본 페이지 핵심
+- **Email OTP Length**: 6~10자리 (코드 입력 UI는 `\d{6,10}` 로 받음). 6자리 권장
 - **Secure email change**: ON (기본 유지)
 
 ### 4-2. URL Configuration (가장 중요)
@@ -134,20 +135,88 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 >
 > 와일드카드 지원: `*` (구분자 제외), `**` (모든 문자), Vercel preview 도메인 패턴 예: `https://*-<team-slug>.vercel.app/**`. preview 배포에서도 매직링크 테스트하려면 이 패턴 추가.
 
-### 4-3. 이메일 템플릿 (선택, 권장)
-**Auth → Email Templates → Magic Link**
+### 4-3. 이메일 템플릿 (필수)
+**Auth → Email Templates → Magic Link** + **Confirm signup** (둘 다 동일 본문 권장)
 
-기본 영문 템플릿이 사용자에게 그대로 발송됩니다. 한국어로 다듬으면 신뢰감이 올라갑니다. 사용 가능한 변수:
-- `{{ .ConfirmationURL }}` — 매직링크 URL (필수, 본문 한 곳에 포함)
-- `{{ .Token }}` — 6자리 OTP (링크 대신 OTP 흐름 쓸 때)
+본 코드는 **OTP 코드 입력 흐름이 기본**이고 매직 링크는 같은 브라우저용 fallback 입니다. 따라서 **두 템플릿 모두 `{{ .Token }}` 과 `{{ .ConfirmationURL }}` 을 함께 포함**해야 합니다. Magic Link / Confirm signup 양쪽에 동일 본문을 넣는 이유: 신규 가입자(첫 OTP 요청)는 Confirm signup 템플릿이, 기존 사용자는 Magic Link 템플릿이 발송되어 UX가 갈리지 않게 하기 위함.
+
+사용 가능한 변수:
+- `{{ .Token }}` — 인증 코드 (자릿수는 Email OTP Length 설정값)
+- `{{ .ConfirmationURL }}` — 매직 링크 URL
 - `{{ .SiteURL }}`, `{{ .Email }}`
 
 > 📌 본 페이지의 카피 정책상 운영자가 직접 문구를 정해주셔야 합니다 (Claude 자체 생성 금지). 한국어 본문 초안이 필요하면 알려주세요.
+> 디자인 컬러는 브랜드 primary (`#006cb7`) 적용 — 인증 코드 글자, 링크 버튼 배경, URL 텍스트.
 
 ### 4-4. Rate Limit & 보안 (그대로 둬도 OK)
 **Auth → Rate Limits** (필요 시만)
 - 기본값: 동일 IP/이메일 기준 매직링크 1회당 60초 쿨다운
 - 사내 임직원 규모에선 기본값 충분
+
+### 4-5. 로그인 흐름 아키텍처 (v3 — 2026-05-25 갱신)
+
+본 코드는 **OTP 코드 입력을 1차 경로**로, 매직링크를 2차 경로로 사용합니다.
+
+**왜 OTP 코드인가** — 매직링크의 PKCE 흐름은 **링크를 같은 브라우저에서 클릭해야만 동작**합니다. 사용자가 모바일 메일앱에서 링크를 열거나 PC와 모바일 브라우저가 다르면 `PKCE code verifier not found` 에러로 로그인 실패. 사내 메일 환경(Outlook 데스크톱·웹·모바일 혼용)에서는 cross-device 발생 빈도가 매우 높음. OTP 코드는 사용자가 직접 입력하므로 어디서 메일을 열어도 안전.
+
+**흐름**
+1. `/login` — 이메일 입력 → `signInWithOtp` 호출 (코드+링크 둘 다 발송됨)
+2. 동일 페이지에서 **인증 코드 입력 단계로 전환** → 사용자가 메일의 코드 입력 → `verifyOtp({ type: 'email' })` → 세션 확립 → `window.location.href = '/apply'` 풀 페이지 이동
+3. 또는 (fallback) 같은 브라우저에서 메일 링크 클릭 → `/auth/callback?code=...` → `exchangeCodeForSession` → `/apply`
+
+**세션 관리**
+- `/login` 진입 시 기존 세션 감지 → 다른 계정으로 로그인된 상태면 상단에 "현재 X으로 로그인되어 있습니다 [로그아웃]" 노출
+- `/apply` 헤더에 로그아웃 버튼 (POST `/auth/signout`)
+- `/auth/signout` route handler → `supabase.auth.signOut()` → `/login` 으로 303 redirect
+
+---
+
+## 4b. 시크릿 관리 (1Password CLI)
+
+### 원칙
+- 평문 `.env.local` 은 worktree 간에 자동 복사되지 않고(`gitignore`), 로컬 디스크에 평문으로 남는 게 부담
+- 1Password CLI 의 `op run` 으로 **항상 vault에서 주입**하면 worktree·머신 옮겨도 동일한 키 사용
+
+### 사전 셋업 (1회)
+1. `op` CLI 설치 (macOS: `brew install 1password-cli`)
+2. 1Password 대시보드 → **Developer Tools → Service Accounts → Create** (vault 접근 권한 부여)
+3. 발급된 `ops_...` 토큰을 `~/.zshrc` 에 영구 등록:
+   ```bash
+   export OP_SERVICE_ACCOUNT_TOKEN="ops_..."
+   ```
+4. 검증: `op whoami` → `User Type: SERVICE_ACCOUNT`
+
+### vault 아이템 구성 (`seongqkim-bss` vault)
+| 아이템 | 필드 | env 매핑 |
+|---|---|---|
+| Supabase | `Publishable_Key` (add more 섹션) | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Resend | `api_key` (로그인 방식 섹션) | `RESEND_API_KEY` |
+| notion | `api-key` | `NOTION_API_KEY` |
+
+### `.env.1password` (커밋 가능, 시크릿 없음)
+시크릿은 `op://...` 참조, 공개값(URL, EMAIL_FROM, DB ID 등)은 평문. `web/.gitignore` 에 `!.env.1password` 예외 등록 필요.
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=op://seongqkim-bss/Supabase/add more/Publishable_Key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+RESEND_API_KEY=op://seongqkim-bss/Resend/Section_xxxxx/api_key
+EMAIL_FROM="사회연대은행 <noreply@mail.ggbss.or.kr>"
+NOTION_API_KEY=op://seongqkim-bss/notion/xxxxx/api-key
+NOTION_APPLICATIONS_DB_ID=<db-id>
+```
+
+### 실행
+```bash
+cd web
+op run --env-file=.env.1password -- npm run dev
+op run --env-file=.env.1password -- npm run build
+```
+
+`op run` 이 `op://` 참조를 vault에서 가져와 실제 값으로 치환 후 child process에 주입. 평문은 디스크에 남지 않음.
+
+### 새 worktree에서 즉시 사용
+별도 복사 작업 없음 — 위 스텝(zshrc + `.env.1password` 가 레포에 있음)만 만족하면 새 worktree에서도 그대로 `op run` 만 실행.
 
 ---
 
@@ -208,6 +277,9 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 | 폼 제출 시 `42501 permission denied for table applications` | RLS 정책 미적용 또는 사용자가 인증되지 않음. **Authentication → Policies** 에서 3개 정책 활성 확인. `proxy.ts` 정상 동작 여부도 확인 (env 누락 시 세션 갱신 안 됨). |
 | 같은 메일 재제출이 새 row 만듬 | RLS update 정책 누락 가능. SQL `0001_applications.sql` 다시 실행. |
 | `/auth/error?reason=exchange` | 매직링크가 만료됐거나 한번 사용된 링크 재클릭. 다시 로그인 페이지에서 발급. |
+| `/auth/error` 세부정보에 `PKCE code verifier not found in storage` | 폼을 제출한 브라우저와 링크를 연 브라우저/디바이스가 다름 (cross-device). 메일의 인증 코드를 신청 페이지에 직접 입력하면 우회 가능. 영구 해결책은 사용자 안내(같은 브라우저에서 열기) 또는 메일에서 링크 블록 제거. |
+| Confirm signup vs Magic Link 템플릿이 다른 메일로 보임 | 신규 가입자는 Confirm signup, 기존 사용자는 Magic Link 템플릿이 발송됨. 두 템플릿을 동일 본문으로 통일해야 UX 균일. |
+| 새 worktree에서 `Your project's URL and Key are required` 런타임 에러 | `.env.local` 은 gitignore라 worktree 간 자동 복사 안 됨. `op run --env-file=.env.1password -- npm run dev` 로 실행하거나 옆 worktree에서 복사. |
 | 비허용 도메인(@gmail 등)이 통과됨 | (드물지만) 클라이언트 우회 + 콜백 검증 우회 동시 발생 시. `app/auth/callback/route.ts`의 `isAllowedEmail()` 호출 확인. |
 
 ---
@@ -221,9 +293,11 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 | `web/lib/supabase/client.ts` | 브라우저 클라이언트 (싱글톤) |
 | `web/lib/constants.ts` | 허용 도메인 + 안내/에러 문구 |
 | `web/supabase/migrations/0001_applications.sql` | 테이블 + RLS |
-| `web/app/login/page.tsx` | 매직링크 요청 폼 + 클라이언트 도메인 검증 |
-| `web/app/auth/callback/route.ts` | exchangeCodeForSession + 서버 도메인 재검증 |
-| `web/app/apply/page.tsx` | 인증 게이트 + 기존 신청 prefill |
+| `web/app/login/page.tsx` | OTP 코드 입력 + 매직링크 fallback, 세션 감지 + 로그아웃 |
+| `web/app/auth/callback/route.ts` | exchangeCodeForSession + 서버 도메인 재검증 (매직링크 클릭 시) |
+| `web/app/auth/signout/route.ts` | POST signout → /login 으로 redirect |
+| `web/app/apply/page.tsx` | 인증 게이트 + 기존 신청 prefill + 로그아웃 버튼 |
+| `web/.env.1password` | 1Password 참조 env 템플릿 (`op run` 으로 주입) |
 | `web/app/apply/ApplyForm.tsx` | 폼 UI (useActionState) |
 | `web/app/apply/actions.ts` | Server Action upsert |
 
@@ -243,6 +317,15 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ---
 
 ## 변경 이력
+
+### v3 — 2026-05-25
+- 로그인 흐름을 OTP 코드 입력 1차 / 매직링크 fallback 2차로 전환 (cross-device PKCE 실패 근본 해결)
+- `/login` 에 기존 세션 감지 + 로그아웃 버튼 추가
+- `/apply` 헤더에 로그아웃 버튼 + `app/auth/signout/route.ts` 신설
+- 시크릿 관리 섹션 (4b) 신설 — 1Password CLI `op run` 사용 표준 절차
+- 이메일 템플릿 정책 갱신 — Magic Link / Confirm signup 둘 다 동일 본문, `{{ .Token }}` + `{{ .ConfirmationURL }}` 동시 포함, brand primary `#006cb7` 적용
+- 트러블슈팅에 PKCE cross-device, 템플릿 분기, worktree env 누락 3건 추가
+- 코드 참조 인덱스에 signout route + `.env.1password` 추가
 
 ### v2 — 2026-05-23
 - Supabase Dashboard 2026-05 메뉴 트리 반영 (`Authentication` → `Auth`)
