@@ -1,3 +1,11 @@
+/* v2 적용: 컬러·폰트 토큰 + raw px 정렬 (utility class 도입 X, layout 구조 유지)
+ * - font-size: v2 enum (16/18/27/40/56/64)
+ * - letter-spacing: 양수 → var(--tracking) (-0.01em), text-transform uppercase 제거 (eyebrow 가독성)
+ * - font-weight: 850 → 800 (v2 enum: 400/600/700/800)
+ * - border-radius: 14/18/999 → 16/24/9999
+ * - spacing/padding 은 기존 유지 (시각 변화 최소화)
+ */
+
 /* ─────────── Hero ─────────── */
 .hero {
   padding: 96px 0 80px;
@@ -15,21 +23,20 @@
   font-size: var(--font-size-caption);
   font-weight: 700;
   color: var(--color-primary);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: var(--tracking);
 }
 
 .heroTitle {
-  font-size: 48px;
-  font-weight: 850;
+  font-size: 56px;
+  font-weight: 800;
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking);
   color: var(--text-main);
   max-width: 24ch;
 }
 
 .heroLead {
-  font-size: 19px;
+  font-size: 18px;
   color: var(--text-muted);
   line-height: 1.6;
   max-width: 64ch;
@@ -49,22 +56,22 @@
 }
 
 .sectionTitle {
-  font-size: 30px;
+  font-size: 27px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking);
   color: var(--text-main);
   margin-bottom: 12px;
 }
 
 .subsectionTitle {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-main);
   margin: 48px 0 16px;
 }
 
 .sectionLead {
-  font-size: 17px;
+  font-size: 18px;
   color: var(--text-muted);
   line-height: 1.6;
   max-width: 70ch;
@@ -96,13 +103,13 @@
 }
 
 .cardTitle {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-main);
 }
 
 .cardSubtitle {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-muted);
   margin-top: -6px;
@@ -162,7 +169,7 @@
 .compareCard {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -175,7 +182,7 @@
 }
 
 .compareCardTitle {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-main);
 }
@@ -193,7 +200,7 @@
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--card-border);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -231,7 +238,7 @@
 .studyCard {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 18px;
+  border-radius: 24px;
   padding: 32px;
   display: flex;
   flex-direction: column;
@@ -245,18 +252,17 @@
 }
 
 .studyEyebrow {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--color-primary);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: var(--tracking);
 }
 
 .studyTitle {
-  font-size: 24px;
+  font-size: 27px;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking);
 }
 
 .studyLead {
@@ -294,12 +300,11 @@
 }
 
 .studyMeta h5 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--text-highlight);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking);
   margin-bottom: 10px;
-  text-transform: uppercase;
 }
 
 .studyMeta ul {
@@ -309,7 +314,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-muted);
 }
 
@@ -336,7 +341,7 @@
   padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--card-border);
-  font-size: 14px;
+  font-size: 16px;
   vertical-align: top;
   color: var(--text-muted);
   line-height: 1.5;
@@ -346,9 +351,8 @@
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--text-main);
   font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 16px;
+  letter-spacing: var(--tracking);
 }
 
 .sessionsTable td:first-child,
@@ -383,11 +387,10 @@
 }
 
 .facCard h4 {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-highlight);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: var(--tracking);
   margin-bottom: 12px;
 }
 
@@ -437,14 +440,14 @@
 }
 
 .applyTitle {
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking);
 }
 
 .applyLead {
-  font-size: 17px;
+  font-size: 18px;
   color: var(--text-muted);
   max-width: 60ch;
 }
@@ -467,7 +470,7 @@
 }
 
 .applyHint {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-muted);
 }
 
@@ -479,7 +482,7 @@
   padding: 16px 32px;
   font-size: 16px;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: 9999px;
   background: var(--color-primary);
   color: var(--color-white);
   border: 1px solid var(--color-primary);
