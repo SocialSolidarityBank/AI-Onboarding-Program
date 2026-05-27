@@ -14,7 +14,6 @@ audience: 에이전트를 활용해 복잡한 로직을 설계하고, 바이브 
 selectionCriteria: 업무 시간 외에도 AI 활용을 위한 시간을 투자할 수 있는 사람
 tools:
   primary: [Codex, Claude Code]
-  secondary: [Hermes Agent]
 deadline: 추후 공지
 sessions:
   - index: 1

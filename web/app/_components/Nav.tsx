@@ -12,8 +12,8 @@ export default function Nav() {
   return (
     <header className={styles.nav}>
       <div className={`container ${styles.row}`}>
-        <a className={styles.logo} href="#top" aria-label="페이지 상단으로">
-          AI 교육 · 스터디
+        <a className={styles.logo} href="#top" aria-label="사회연대은행 홈">
+          <img src="/logo.svg" alt="사회연대은행" height={32} />
         </a>
         <nav className={styles.links} aria-label="주요 섹션">
           {SECTIONS.map((s) => (

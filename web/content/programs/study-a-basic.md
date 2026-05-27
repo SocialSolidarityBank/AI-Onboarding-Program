@@ -12,8 +12,7 @@ contentSummary:
 audience: AI를 문서 작성, 검색, 아이디어 도출 등 대화를 통한 결과물 만드는 경험만 있는 사용자. 아이디어를 정리한 산출물을 AI를 통해 빠르게 만들고 싶은 사람
 selectionCriteria: 현재 하고 있는 업무를 잘할 수 있게 만드는 도구로서 AI를 잘 활용하고 싶은 사람
 tools:
-  primary: [ChatGPT]
-  secondary: [Claude/Cowork, Gemini, Canva, Figma 등]
+  primary: [ChatGPT, Claude]
 deadline: 추후 공지
 sessions:
   - index: 1

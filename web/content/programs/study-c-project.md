@@ -11,8 +11,7 @@ contentSummary:
 audience: 실제 사업, 기관 운영과 관련된 프로젝트를 설계하고, AI를 사용해 프로덕트를 만들어 보고 싶은 사람
 selectionCriteria: 개발 지식을 학습해 부서의 사업과 기관 운영 시스템을 만들어 보고 싶은 사람
 tools:
-  primary: [Codex, Claude Code]
-  secondary: [Hermes Agent, 개발 보조 도구]
+  primary: [Codex, Claude Code, 기타 개발 도구]
 deadline: 추후 공지
 sessions:
   - index: 1

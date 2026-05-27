@@ -37,7 +37,9 @@ function Hero() {
   return (
     <section className={styles.hero}>
       <div className={`container ${styles.heroInner}`}>
-        <h1 className={styles.heroTitle}>AI 교육 및 스터디</h1>
+        <h1 className={styles.heroTitle}>
+          사회연대은행<br />AI 교육 및 스터디
+        </h1>
         <p className={styles.heroLead}>
           6월부터 10월까지 진행되는 임직원 대상 사내 AI 교육과 스터디 소개 및
           신청 페이지입니다.
@@ -173,7 +175,7 @@ function StudyComparison({ studies }: { studies: Program[] }) {
 
 function renderCompareCell(p: Program, key: string) {
   if (key === "tools") {
-    const all = [...(p.tools?.primary ?? []), ...(p.tools?.secondary ?? [])];
+    const all = p.tools?.primary ?? [];
     return all.length ? all.join(", ") : "—";
   }
   if (key === "contentSummary") {
@@ -225,14 +227,7 @@ function StudyDetailCard({ program }: { program: Program }) {
         <h5>사용 도구</h5>
         <ul>
           {program.tools?.primary?.length ? (
-            <li>
-              <strong>주요 도구:</strong> {program.tools.primary.join(", ")}
-            </li>
-          ) : null}
-          {program.tools?.secondary?.length ? (
-            <li>
-              <strong>보조 도구:</strong> {program.tools.secondary.join(", ")}
-            </li>
+            <li>{program.tools.primary.join(", ")}</li>
           ) : null}
         </ul>
       </div>
