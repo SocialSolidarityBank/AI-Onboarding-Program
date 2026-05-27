@@ -95,8 +95,7 @@ function WholeSection({ programs }: { programs: Program[] }) {
       <div className="container">
         <h2 className={styles.sectionTitle}>전체 교육 및 워크샵</h2>
         <p className={styles.sectionLead}>
-          6월-10월 사이에 진행되는 전체 임직원 대상 교육과 워크샵 내용을
-          소개합니다.
+          전체 임직원 대상 교육 및 워크샵이 6월 ~ 10월에 진행됩니다.
         </p>
         <div className={styles.cardGrid}>
           {programs.map((p) => (
@@ -124,8 +123,11 @@ function StudySection({ studies }: { studies: Program[] }) {
       <div className="container">
         <h2 className={styles.sectionTitle}>스터디 그룹</h2>
         <p className={styles.sectionLead}>
-          6월부터 9월까지 총 6회(12주간 격주 1회)간 진행되는 사내 AI 스터디를
-          소개합니다.
+          스터디는 6월부터 9월까지{" "}
+          <span className={styles.leadEmphasis}>
+            총 6회(격주 1회, 12주)
+          </span>{" "}
+          진행됩니다.
         </p>
         <p className={styles.sectionNote}>일정: 추후 공지</p>
 
@@ -226,11 +228,13 @@ function StudyDetailCard({ program }: { program: Program }) {
 
       <div className={styles.studyMeta}>
         <h5>사용 도구</h5>
-        <ul>
-          {program.tools?.primary?.length ? (
-            <li>{program.tools.primary.join(", ")}</li>
-          ) : null}
-        </ul>
+        <div className={styles.toolsBadges}>
+          {program.tools?.primary?.map((tool) => (
+            <span key={tool} className={styles.toolBadge}>
+              {tool}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className={styles.studyMeta}>
