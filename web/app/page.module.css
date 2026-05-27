@@ -656,6 +656,8 @@
 /* ─────────── Footer ─────────── */
 .footer {
   padding: 32px 0 48px;
-  color: var(--text-muted);
+  background: var(--c-ink-deep);
+  color: var(--c-light-grey);
   font-size: var(--font-size-caption);
+  text-align: center;
 }
