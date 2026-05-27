@@ -311,9 +311,9 @@
   font-weight: 800;
 }
 
-/* h5 와 다음 h5 사이 (= .studyMeta sibling 사이) 가로선
- * 카드의 외곽 마진은 침범하지 않고 안쪽 padding-top 위에 그림 */
-.studyMeta + .studyMeta {
+/* studyCard 내 모든 .studyMeta 위에 가로선 (첫 .studyMeta 도 포함)
+ * 카드 외곽 마진은 침범하지 않고 안쪽 padding-top 위에 그림 */
+.studyMeta {
   border-top: 1px solid var(--card-border);
   padding-top: 20px;
 }
@@ -442,6 +442,85 @@
   .facGrid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ─────────── FAQ accordion (v3 패턴) ─────────── */
+.faqAccordion {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.faqItem {
+  border-top: 1px solid var(--card-border);
+}
+
+.faqItem:last-child {
+  border-bottom: 1px solid var(--card-border);
+}
+
+.faqSummary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.faqSummary::-webkit-details-marker {
+  display: none;
+}
+
+.faqIcon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--c-sky-light);
+  position: relative;
+  transition: transform var(--t-quick), background-color var(--t-quick);
+}
+
+.faqIcon::before,
+.faqIcon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 2px;
+  background: var(--c-primary);
+  transform: translate(-50%, -50%);
+  transition: transform var(--t-quick);
+}
+
+.faqIcon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.faqItem[open] .faqIcon {
+  background: var(--c-primary);
+  transform: rotate(45deg);
+}
+
+.faqItem[open] .faqIcon::before,
+.faqItem[open] .faqIcon::after {
+  background: #fff;
+}
+
+.faqBody {
+  padding: 0 48px 24px 0;
+}
+
+.faqBody p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-muted);
 }
 
 /* ─────────── 신청 CTA ─────────── */

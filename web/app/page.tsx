@@ -20,6 +20,7 @@ export default function Home() {
         <WholeSection programs={whole} />
         <StudySection studies={studies} />
         {facilitator ? <FacilitatorSection program={facilitator} /> : null}
+        <FaqSection />
         <ApplyCTASection />
       </main>
       <footer className={styles.footer}>
@@ -71,7 +72,7 @@ function ProgramOverviewSection() {
     <section id="overview" className={styles.section}>
       <div className="container">
         <h2 className={styles.sectionTitle}>
-          교육 및 워크샵은 이렇게 구성됩니다
+          교육 및 스터디는 이렇게 구성했습니다
         </h2>
         <div className={styles.cardGrid}>
           {items.map((it) => (
@@ -284,6 +285,52 @@ function FacilitatorSection({ program }: { program: Program }) {
               ))}
             </ul>
           </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const STATIC_FAQS: { q: string; a: string }[] = [
+  {
+    q: "강사가 있나요?",
+    a: "외부 강사를 초빙할 계획이지만, 한 번의 강의보다 10시간의 사용이 더 효율적입니다. 최대한 많은 정보를 드리고, 궁금한 것에 답변을 해드릴 예정입니다. 그리고 이미 사내에도 은둔 고수들이 많이 계셔서 서로 도울 수 있도록 스터디 그룹을 지향하고 있습니다.",
+  },
+  {
+    q: "프로젝트 그룹은 무엇을 만드나요?",
+    a: "신청 접수부터 안내까지 대응하는 신청 자동화, 사업 홈페이지 직접 만들기, 나만의 데이터베이스 구축하기, 엑셀/한글/워드/PPT 활용 봇(Bot), 개인 비서, 사회연대은행을 잘 아는 사내 챗봇, 고객 CS 대응 챗봇 등 다양한 프로젝트를 할 수 있습니다. 본인의 아이디어를 구현하고 결과물을 만듭니다.",
+  },
+  {
+    q: "퍼실리테이터는 아무나 할 수 있나요?",
+    a: "누구든지 의지만 있으면 할 수 있습니다. 학습에 시간을 많이 써야 하지만 의지만 있다면 못할 이유가 없어요. 많이 쓰고 공부한 사람이 잘하는 사람이 됩니다. 다만, 주변 동료들을 도와줄 수 있는 열린 마음은 필요한 것 같아요.",
+  },
+  {
+    q: "일정이 어려우면 어떻게 하나요?",
+    a: "일정 문제로 고민하는 분들이 많아서 스터디 형태로 진행합니다. 신청시 가능한 일정을 미리 받아 일정별로 모이는 시간을 조정하려고 합니다.",
+  },
+  {
+    q: "어떤 툴을 사용하나요?",
+    a: "스터디별로 스터디에 맞는 툴을 지원할 예정입니다. 클로드나 챗지피티를 사용하는데 토큰 사용량이 많은 챗지피티를 우선 사용해 보려고 합니다. 회사 지원 계정과 별도로 비영리 단체 할인 지원이 되는 개인 계정으로 지급할 예정입니다. 프로젝트 그룹이나 퍼실리테이터 그룹에는 사용량이 많고 저렴한 구독 모델을 고려하고 있습니다.",
+  },
+];
+
+function FaqSection() {
+  return (
+    <section id="faq" className={styles.section}>
+      <div className="container">
+        <h2 className={styles.sectionTitle}>자주 묻는 질문</h2>
+        <div className={styles.faqAccordion}>
+          {STATIC_FAQS.map((item, i) => (
+            <details key={i} className={styles.faqItem}>
+              <summary className={styles.faqSummary}>
+                <span>{item.q}</span>
+                <span className={styles.faqIcon} aria-hidden />
+              </summary>
+              <div className={styles.faqBody}>
+                <p>{item.a}</p>
+              </div>
+            </details>
+          ))}
         </div>
       </div>
     </section>
