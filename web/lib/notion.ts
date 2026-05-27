@@ -42,9 +42,17 @@ function trimToLimit(value: string, limit: number = NOTION_TEXT_LIMIT): string {
 }
 
 function buildProperties(row: SyncRow): Record<string, unknown> {
+  // Notion multi_select option name 안에 콤마 금지 → tools_other 자유입력은
+  // 콤마 (",", "，") 로 split 해서 각각 별도 option 으로 보냄.
+  const otherTools = row.toolsOther
+    ? row.toolsOther
+        .split(/[,，]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
   const toolList = [
     ...row.tools.filter((t) => t !== "기타"),
-    ...(row.toolsOther ? [row.toolsOther] : []),
+    ...otherTools,
   ];
   return {
     이름: {
