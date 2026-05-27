@@ -42,18 +42,8 @@ function trimToLimit(value: string, limit: number = NOTION_TEXT_LIMIT): string {
 }
 
 function buildProperties(row: SyncRow): Record<string, unknown> {
-  // Notion multi_select option name 안에 콤마 금지 → tools_other 자유입력은
-  // 콤마 (",", "，") 로 split 해서 각각 별도 option 으로 보냄.
-  const otherTools = row.toolsOther
-    ? row.toolsOther
-        .split(/[,，]/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-  const toolList = [
-    ...row.tools.filter((t) => t !== "기타"),
-    ...otherTools,
-  ];
+  // 사용 툴 multi_select 에는 체크박스로 고른 옵션만 (기타 자유입력은 별도 컬럼).
+  const toolList = row.tools.filter((t) => t !== "기타");
   return {
     이름: {
       title: [{ type: "text", text: { content: row.name || "—" } }],
@@ -71,6 +61,16 @@ function buildProperties(row: SyncRow): Record<string, unknown> {
     },
     "사용 툴": {
       multi_select: toolList.map((name) => ({ name })),
+    },
+    "기타 도구": {
+      rich_text: row.toolsOther
+        ? [
+            {
+              type: "text",
+              text: { content: trimToLimit(row.toolsOther) },
+            },
+          ]
+        : [],
     },
     "기대하는 바": {
       rich_text: row.expectations
