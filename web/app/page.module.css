@@ -10,13 +10,19 @@
 .hero {
   padding: 96px 0 80px;
   border-bottom: 1px solid var(--card-border);
+  background: linear-gradient(to bottom, var(--c-sky-light), var(--c-canvas));
 }
 
 .heroInner {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
+}
+
+.heroInner > * {
+  max-width: 64ch;
 }
 
 .heroEyebrow {
@@ -441,7 +447,7 @@
 
 /* ─────────── 신청 CTA ─────────── */
 .applySection {
-  padding: 96px 0;
+  padding: 72px 0;
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
