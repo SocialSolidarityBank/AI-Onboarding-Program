@@ -74,7 +74,7 @@
   font-weight: 800;
   color: var(--c-ink-deep);
   background: var(--c-sky-light);
-  border: 1px solid var(--c-primary);
+  border: 1px solid var(--card-border);
   padding: 18px 24px;
   border-radius: 12px;
   margin: 48px 0 16px;
