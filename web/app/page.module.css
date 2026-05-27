@@ -59,14 +59,14 @@
   font-size: 27px;
   font-weight: 800;
   letter-spacing: var(--tracking);
-  color: var(--text-main);
+  color: var(--c-primary);
   margin-bottom: 12px;
 }
 
 .subsectionTitle {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--c-sky);
   margin: 48px 0 16px;
 }
 
@@ -110,9 +110,9 @@
 }
 
 .cardTitle {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--c-sky);
 }
 
 .cardSubtitle {
@@ -456,7 +456,7 @@
 .applyTitle {
   font-size: 40px;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--c-primary);
   letter-spacing: var(--tracking);
 }
 
