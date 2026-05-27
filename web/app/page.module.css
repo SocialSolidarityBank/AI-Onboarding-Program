@@ -446,7 +446,7 @@
 
 /* ─────────── 신청 CTA ─────────── */
 .applySection {
-  padding: 72px 0;
+  padding: 96px 0;
   background: var(--c-ink-deep);
   color: #fff;
 }

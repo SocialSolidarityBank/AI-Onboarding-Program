@@ -92,7 +92,7 @@ function WholeSection({ programs }: { programs: Program[] }) {
   return (
     <section id="whole" className={styles.section}>
       <div className="container">
-        <h2 className={styles.sectionTitle}>전체 교육 및 워크샵 소개</h2>
+        <h2 className={styles.sectionTitle}>전체 교육 및 워크샵</h2>
         <p className={styles.sectionLead}>
           6월-10월 사이에 진행되는 전체 임직원 대상 교육과 워크샵 내용을
           소개합니다.
@@ -121,7 +121,7 @@ function StudySection({ studies }: { studies: Program[] }) {
   return (
     <section id="study" className={styles.section}>
       <div className="container">
-        <h2 className={styles.sectionTitle}>스터디 소개</h2>
+        <h2 className={styles.sectionTitle}>스터디 그룹</h2>
         <p className={styles.sectionLead}>
           6월부터 9월까지 총 6회(12주간 격주 1회)간 진행되는 사내 AI 스터디를
           소개합니다.
@@ -265,9 +265,7 @@ function FacilitatorSection({ program }: { program: Program }) {
   return (
     <section id="facilitator" className={styles.section}>
       <div className="container">
-        <h2 className={styles.sectionTitle}>
-          퍼실리테이터(Facilitator) 그룹
-        </h2>
+        <h2 className={styles.sectionTitle}>퍼실리테이터</h2>
         <p className={styles.sectionLead}>{program.subtitle}</p>
         <div className={styles.facGrid}>
           <article className={styles.facCard}>
@@ -296,7 +294,7 @@ function ApplyCTASection() {
   return (
     <section id="apply" className={styles.applySection}>
       <div className={`container ${styles.applyInner}`}>
-        <h2 className={styles.applyTitle}>교육 및 스터디 신청하기</h2>
+        <h2 className={styles.applyTitle}>신청하기</h2>
         <p className={styles.applyHint}>
           신청 시 이메일은 회사 계정(@bss.or.kr 또는 @ggbss.or.kr)으로
           신청하셔야 확인 메일을 받으실 수 있습니다.
