@@ -8,7 +8,7 @@
 
 /* ─────────── Hero ─────────── */
 .hero {
-  padding: 96px 0 80px;
+  padding: 104px 0 80px;
   background: linear-gradient(to bottom, var(--c-sky-light), var(--c-canvas));
 }
 
@@ -69,16 +69,19 @@
 }
 
 .subsectionTitle {
+  display: block;
   font-size: 21px;
   font-weight: 800;
-  color: var(--c-sky);
+  color: #fff;
+  background: var(--c-ink-deep);
+  padding: 18px 24px;
+  border-radius: 12px;
   margin: 48px 0 16px;
+  letter-spacing: var(--tracking);
 }
 
-/* 섹션 내 동일 레벨 소제목 사이 가로선 — 첫 번째는 제외 */
+/* 동일 위계 두 번째부터는 위 여백을 더 줘서 구분 (가로선 대신 카드 자체가 분리) */
 .subsectionTitle:not(:first-of-type) {
-  border-top: 1px solid var(--card-border);
-  padding-top: 40px;
   margin-top: 56px;
 }
 

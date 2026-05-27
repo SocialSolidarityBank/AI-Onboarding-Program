@@ -6,6 +6,7 @@ const SECTIONS: { id: string; label: string }[] = [
   { id: "study", label: "스터디 그룹" },
   { id: "facilitator", label: "퍼실리테이터" },
   { id: "apply", label: "신청하기" },
+  { id: "faq", label: "자주 묻는 질문" },
 ];
 
 export default function Nav() {
@@ -13,7 +14,7 @@ export default function Nav() {
     <header className={styles.nav}>
       <div className={`container ${styles.row}`}>
         <a className={styles.logo} href="#top" aria-label="사회연대은행 홈">
-          <img src="/logo.svg" alt="사회연대은행" height={40} />
+          <img src="/logo.svg" alt="사회연대은행" height={50} />
         </a>
         <nav className={styles.links} aria-label="주요 섹션">
           {SECTIONS.map((s) => (
