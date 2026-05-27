@@ -72,8 +72,8 @@
   display: block;
   font-size: 21px;
   font-weight: 800;
-  color: #fff;
-  background: var(--c-ink-deep);
+  color: var(--c-ink-deep);
+  background: var(--c-light-grey);
   padding: 18px 24px;
   border-radius: 12px;
   margin: 48px 0 16px;
