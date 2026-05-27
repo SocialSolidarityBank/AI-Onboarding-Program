@@ -3,7 +3,7 @@ id: facilitator
 type: facilitator
 order: 1
 title: 퍼실리테이터(Facilitator) 그룹 신청
-subtitle: 팀 내 AI 학습 및 활용 업무를 지원합니다.
+subtitle: 퍼실리테이터는 AI 활용 전문가가 되기 위해 연구하고 팀 내 AI 학습 및 활용 업무를 지원하는 그룹입니다.
 deadline: 추후 공지
 roles:
   - 팀에 도움을 줄 수 있는 적극적인 사용자가 퍼실리테이터가 되어 팀 내 AI 사용을 도와주고, 업무에 도움이 되는 도구를 개발합니다.
