@@ -23,9 +23,6 @@ export default function Nav() {
             </a>
           ))}
         </nav>
-        <Link href="/data" className={styles.dataLink}>
-          사업 데이터
-        </Link>
         <Link href="/apply" className={styles.applyLink}>
           신청하기
         </Link>
