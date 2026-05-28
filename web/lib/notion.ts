@@ -41,6 +41,14 @@ function trimToLimit(value: string, limit: number = NOTION_TEXT_LIMIT): string {
   return value.slice(0, limit - 1) + "…";
 }
 
+// 신청 시각(UTC)을 한국 표준시(KST, 항상 UTC+9, DST 없음) 오프셋 표기로 변환.
+// 같은 순간을 +09:00 로 표기해 Notion 이 KST 벽시계로 표시하도록 한다.
+function toKstIso(utcIso: string): string {
+  const ms = new Date(utcIso).getTime();
+  if (Number.isNaN(ms)) return utcIso;
+  return new Date(ms + 9 * 60 * 60 * 1000).toISOString().replace("Z", "+09:00");
+}
+
 function buildProperties(row: SyncRow): Record<string, unknown> {
   // 사용 툴 multi_select 에는 체크박스로 고른 옵션만 (기타 자유입력은 별도 컬럼).
   const toolList = row.tools.filter((t) => t !== "기타");
@@ -53,8 +61,17 @@ function buildProperties(row: SyncRow): Record<string, unknown> {
     "신청 과정": {
       multi_select: row.programTitles.map((name) => ({ name })),
     },
+    // 학습 목표는 문구에 쉼표가 포함될 수 있어 multi_select 가 거부한다.
+    // (Notion multi_select 옵션명은 쉼표 불가) → rich_text 로 원문 보존.
     "학습 목표": {
-      multi_select: row.learningGoals.map((name) => ({ name })),
+      rich_text: row.learningGoals.length
+        ? [
+            {
+              type: "text",
+              text: { content: trimToLimit(row.learningGoals.join("\n")) },
+            },
+          ]
+        : [],
     },
     "참여 가능 요일": {
       multi_select: row.availableDays.map((name) => ({ name })),
@@ -83,7 +100,7 @@ function buildProperties(row: SyncRow): Record<string, unknown> {
         : [],
     },
     신청일시: {
-      date: { start: row.createdAt },
+      date: { start: toKstIso(row.createdAt) },
     },
   };
 }
