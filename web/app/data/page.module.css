@@ -94,7 +94,8 @@
 }
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
 }
 .table th,
@@ -109,9 +110,6 @@
   color: var(--color-white);
   font-weight: 600;
   font-size: 12.5px;
-  position: sticky;
-  top: 57px;
-  z-index: 4;
 }
 .table tbody tr:hover {
   background: rgba(0, 108, 183, 0.06);
