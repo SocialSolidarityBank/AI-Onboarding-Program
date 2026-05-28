@@ -49,6 +49,13 @@ function toKstIso(utcIso: string): string {
   return new Date(ms + 9 * 60 * 60 * 1000).toISOString().replace("Z", "+09:00");
 }
 
+// Notion multi_select 옵션명은 쉼표를 허용하지 않는다(쉼표 포함 시 속성 거부 →
+// 해당 row 전체 동기화 실패). 학습목표 등 문구의 쉼표를 한국어 나열 기호 '·' 로
+// 치환해 multi_select 로 안전하게 보존한다. 화면 폼 문구는 원본을 유지한다.
+function toMultiSelectName(value: string): { name: string } {
+  return { name: value.replace(/\s*,\s*/g, "·") };
+}
+
 function buildProperties(row: SyncRow): Record<string, unknown> {
   // 사용 툴 multi_select 에는 체크박스로 고른 옵션만 (기타 자유입력은 별도 컬럼).
   const toolList = row.tools.filter((t) => t !== "기타");
@@ -59,25 +66,17 @@ function buildProperties(row: SyncRow): Record<string, unknown> {
     이메일: { email: row.email },
     소속: row.team ? { select: { name: row.team } } : { select: null },
     "신청 과정": {
-      multi_select: row.programTitles.map((name) => ({ name })),
+      multi_select: row.programTitles.map(toMultiSelectName),
     },
-    // 학습 목표는 문구에 쉼표가 포함될 수 있어 multi_select 가 거부한다.
-    // (Notion multi_select 옵션명은 쉼표 불가) → rich_text 로 원문 보존.
+    // 학습목표 문구의 쉼표는 toMultiSelectName 에서 '·' 로 치환된다.
     "학습 목표": {
-      rich_text: row.learningGoals.length
-        ? [
-            {
-              type: "text",
-              text: { content: trimToLimit(row.learningGoals.join("\n")) },
-            },
-          ]
-        : [],
+      multi_select: row.learningGoals.map(toMultiSelectName),
     },
     "참여 가능 요일": {
-      multi_select: row.availableDays.map((name) => ({ name })),
+      multi_select: row.availableDays.map(toMultiSelectName),
     },
     "사용 툴": {
-      multi_select: toolList.map((name) => ({ name })),
+      multi_select: toolList.map(toMultiSelectName),
     },
     "기타 도구": {
       rich_text: row.toolsOther
