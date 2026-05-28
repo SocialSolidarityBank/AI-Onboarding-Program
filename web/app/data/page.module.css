@@ -31,6 +31,35 @@
   opacity: 0.85;
 }
 
+/* 탭 */
+.tabsWrap {
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding-top: 10px;
+}
+.tabBtn {
+  padding: 9px 18px;
+  border: 1px solid var(--card-border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  top: 1px;
+}
+.tabOn {
+  background: var(--color-white);
+  color: var(--color-bg-dark);
+  border-bottom: 1px solid var(--color-white);
+}
+
 /* 필터 바 */
 .barWrap {
   position: sticky;
@@ -248,8 +277,194 @@
   line-height: 1.5;
 }
 
+/* 백서 포함 토글 */
+.wpToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+/* 체크박스 열 */
+.chk {
+  width: 36px;
+  text-align: center !important;
+}
+.chk input {
+  cursor: pointer;
+}
+.pickedRow {
+  background: rgba(0, 108, 183, 0.08);
+}
+
+/* 일괄 태깅 바 */
+.tagBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 6px 0 12px;
+  background: rgba(0, 108, 183, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+}
+.tagBarCount {
+  font-weight: 700;
+  font-size: 13px;
+}
+.tagInput {
+  flex: 1;
+  min-width: 160px;
+  padding: 8px 11px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  font: inherit;
+  background: var(--color-white);
+}
+.tagAdd,
+.tagRemove {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--card-border);
+}
+.tagAdd {
+  background: var(--color-bg-dark, #2c3e50);
+  color: #fff;
+  border-color: transparent;
+}
+.tagRemove {
+  background: var(--color-white);
+  color: var(--text-main);
+}
+.tagAdd:disabled,
+.tagRemove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.msg {
+  font-size: 13px;
+  color: var(--text-main);
+  margin: 4px 0 12px;
+}
+
+/* 태그 칩 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #eef3f0;
+  color: #2d6a4f;
+  border: 1px solid #cfe3d8;
+}
+
+/* 대시보드 */
+.dash {
+  padding-top: 18px;
+}
+.dashNote {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.dashWarn {
+  font-size: 13px;
+  color: #8a5a14;
+  background: #fbeede;
+  border: 1px solid #e6cfa6;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.card {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--color-white);
+  padding: 16px 18px;
+}
+.cardLabel {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.cardValue {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-bg-dark, #2c3e50);
+}
+.cardSub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.unitList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.unitRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.unitName {
+  color: var(--text-muted);
+}
+.dashH {
+  font-size: 16px;
+  margin: 8px 0 4px;
+}
+
+/* 판정 배지 */
+.badgeOk,
+.badgeDiff,
+.badgeNa {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.badgeOk {
+  background: #e3f4e8;
+  color: #1d7a3a;
+}
+.badgeDiff {
+  background: #fde7e7;
+  color: #b32424;
+}
+.badgeNa {
+  background: #ececf2;
+  color: #555;
+}
+
 @media (max-width: 640px) {
   .pname {
     max-width: 200px;
+  }
+  .cards {
+    grid-template-columns: 1fr;
   }
 }

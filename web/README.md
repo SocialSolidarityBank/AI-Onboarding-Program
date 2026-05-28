@@ -2,17 +2,21 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+이 프로젝트는 시크릿(Supabase 키 등)을 1Password로 주입합니다. 개발 서버는
+아래 명령으로 실행하세요 (`npm run dev`가 자동으로 `op run`을 거칩니다).
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+
+사전 조건: 셸에 `OP_SERVICE_ACCOUNT_TOKEN`이 export 돼 있어야 합니다 (`~/.zshrc`).
+값은 `.env.1password`의 `op://` 참조로 해석됩니다.
+
+> 1Password 없이(예: env가 이미 셸에 있는 경우) 띄우려면 `npm run dev:plain`.
+> 단, Supabase 키가 없으면 `/data` 등에서 500 에러가 납니다.
+
+서버 실행 전 포트 충돌을 확인하세요: `lsof -ti:3000` 으로 점유 프로세스가 있으면
+정리한 뒤 단일 인스턴스만 띄웁니다.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

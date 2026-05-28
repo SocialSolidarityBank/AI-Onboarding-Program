@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import DataExplorer, { type ProgramRow } from "./DataExplorer";
+import DataExplorer, { type ProgramRow, type AreaSummaryRow } from "./DataExplorer";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -19,15 +19,21 @@ export default async function DataPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const programsRes = await supabase
-    .from("programs")
-    .select(
-      "program_id,basis,report_year,area_code,area_name,program_name,period,headline_value,headline_unit,budget_krw,target,support_type,source_document,memo,funders,details,kpis"
-    )
-    .order("report_year", { ascending: false })
-    .order("area_code");
+  const [programsRes, areaRes] = await Promise.all([
+    supabase
+      .from("programs")
+      .select(
+        "program_id,basis,report_year,area_code,area_name,program_name,period,headline_value,headline_unit,budget_krw,target,support_type,source_document,memo,funders,details,kpis,tags"
+      )
+      .order("report_year", { ascending: false })
+      .order("area_code"),
+    supabase
+      .from("area_summary")
+      .select("basis,report_year,area_code,area_name,budget_krw"),
+  ]);
 
   const programs = (programsRes.data ?? []) as ProgramRow[];
+  const areaSummary = (areaRes.data ?? []) as AreaSummaryRow[];
 
   // RLS상 운영자(operators)만 행이 보임 — 데이터가 있는데 0건이면 권한 없음.
   if (programs.length === 0) {
@@ -48,5 +54,11 @@ export default async function DataPage() {
     );
   }
 
-  return <DataExplorer programs={programs} email={user.email ?? ""} />;
+  return (
+    <DataExplorer
+      programs={programs}
+      areaSummary={areaSummary}
+      email={user.email ?? ""}
+    />
+  );
 }
