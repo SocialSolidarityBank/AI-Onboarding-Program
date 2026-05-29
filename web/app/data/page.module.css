@@ -158,6 +158,27 @@
   cursor: pointer;
 }
 
+/* 키보드 포커스 링 (focus-visible 통일) */
+.tabBtn:focus-visible,
+.tagAdd:focus-visible,
+.close:focus-visible,
+.row:focus-visible {
+  outline: 2px solid var(--c-line-focus);
+  outline-offset: 2px;
+}
+.basisGroup:focus-within {
+  border-color: var(--c-line-focus);
+  box-shadow: inset 0 0 0 1px var(--c-line-focus);
+}
+
+/* 선택된 행 강조 (다중선택 시각 상태) */
+.pickedRow td {
+  background: rgba(0, 108, 183, 0.07);
+}
+.pickedRow:hover td {
+  background: rgba(0, 108, 183, 0.11);
+}
+
 /* ── 고정 툴바 (count + 설정바 + 메시지) ── */
 .toolbar {
   display: flex;
@@ -362,8 +383,8 @@
   position: absolute;
   top: 16px;
   right: 18px;
-  height: 36px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 14px;
   border: 1px solid var(--c-line-default);
   background: var(--color-white);
   border-radius: var(--r-md);
@@ -531,11 +552,11 @@
 }
 .badgeOk {
   background: #e3f4e8;
-  color: var(--c-positive);
+  color: #0a6b48; /* 진한 녹색 — AA 대비 확보 */
 }
 .badgeDiff {
   background: #fde7e7;
-  color: var(--c-negative);
+  color: #b3361a; /* 진한 주황적색 — AA 대비 확보 */
 }
 .badgeNa {
   background: var(--c-light-grey);

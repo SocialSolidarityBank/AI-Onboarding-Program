@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import styles from "./page.module.css";
 import { setCategory } from "./actions";
 import BudgetBarChart from "./charts/BudgetBarChart";
@@ -78,13 +78,12 @@ const yearLabel = (r: { basis: string; report_year: number | null }) =>
 const keyOf = (r: { program_id: string; basis: string }) =>
   `${r.program_id}::${r.basis}`;
 
-// 표준분류 컬러 닷 + 라벨 (그래프와 통일감)
+// 표준분류 컬러 닷 + 라벨 (그래프와 통일 — 미분류도 회색 닷)
 function CatChip({ cat }: { cat: string | null }) {
-  if (!cat) return <span className={styles.unsetText}>미분류</span>;
   return (
     <span className={styles.catChip}>
       <span className={styles.catDot} style={{ background: catHex(cat) }} />
-      {cat}
+      <span className={cat ? undefined : styles.unsetText}>{cat ?? "미분류"}</span>
     </span>
   );
 }
@@ -255,6 +254,7 @@ export default function DataExplorer({
           <input
             className={styles.search}
             type="search"
+            aria-label="사업 검색"
             placeholder="사업명·메모·기금처·표준분류 검색…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -286,7 +286,7 @@ export default function DataExplorer({
               백서(누적)
             </label>
           </span>
-          <select className={styles.sel} value={year} onChange={(e) => setYear(e.target.value)}>
+          <select className={styles.sel} aria-label="연도 필터" value={year} onChange={(e) => setYear(e.target.value)}>
             <option value="">전체 연도</option>
             {years.map((y) => (
               <option key={y} value={String(y)}>
@@ -294,7 +294,7 @@ export default function DataExplorer({
               </option>
             ))}
           </select>
-          <select className={styles.sel} value={area} onChange={(e) => setArea(e.target.value)}>
+          <select className={styles.sel} aria-label="원본 영역 필터" value={area} onChange={(e) => setArea(e.target.value)}>
             <option value="">전체 영역</option>
             {areaNames.map((a) => (
               <option key={a} value={a}>
@@ -304,6 +304,7 @@ export default function DataExplorer({
           </select>
           <select
             className={styles.sel}
+            aria-label="표준분류 필터"
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value)}
           >
@@ -334,6 +335,7 @@ export default function DataExplorer({
                 </span>
                 <select
                   className={styles.sel}
+                  aria-label="선택 항목에 설정할 표준분류"
                   value={catInput}
                   onChange={(e) => setCatInput(e.target.value)}
                   disabled={pending}
@@ -424,7 +426,18 @@ function TableView({
             {rows.map((r) => {
               const k = keyOf(r);
               return (
-                <tr key={k} className={picked.has(k) ? styles.pickedRow : ""}>
+                <tr
+                  key={k}
+                  className={`${styles.row} ${picked.has(k) ? styles.pickedRow : ""}`}
+                  tabIndex={0}
+                  aria-label={`${r.program_name ?? "사업"} 상세 보기`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      onSelect(r);
+                    }
+                  }}
+                >
                   <td className={styles.chk} onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
@@ -711,14 +724,36 @@ function Drawer({ row, onClose }: { row: ProgramRow; onClose: () => void }) {
   const details = row.details ?? [];
   const funders = row.funders ?? [];
   const kpis = row.kpis ?? [];
+
+  // Esc 로 닫기
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <>
       <div className={styles.ov} onClick={onClose} />
-      <aside className={styles.drawer}>
-        <button className={styles.close} onClick={onClose}>
+      <aside
+        className={styles.drawer}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawer-title"
+      >
+        <button
+          className={styles.close}
+          onClick={onClose}
+          aria-label="상세 닫기"
+          autoFocus
+        >
           닫기 ✕
         </button>
-        <h3 className={styles.dTitle}>{row.program_name}</h3>
+        <h3 id="drawer-title" className={styles.dTitle}>
+          {row.program_name}
+        </h3>
         <p className={styles.dMeta}>
           {row.program_id} ·{" "}
           <span className={`${styles.tag} ${styles["b_" + row.basis]}`}>

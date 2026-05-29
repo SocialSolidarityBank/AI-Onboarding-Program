@@ -29,10 +29,19 @@ function ChartTooltip({
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-md">
-      <div className="font-semibold text-slate-700">{d.name}</div>
-      <div className="text-slate-500">
-        예산 <b className="text-slate-800">{eok(d.value)}억원</b>
+    <div
+      style={{
+        borderRadius: 8,
+        border: "1px solid #D8DEE3",
+        background: "#fff",
+        padding: "8px 12px",
+        fontSize: 14,
+        boxShadow: "0 4px 16px rgba(10,30,51,0.08)",
+      }}
+    >
+      <div style={{ fontWeight: 600, color: "#0A1E33" }}>{d.name}</div>
+      <div style={{ color: "#7B7875" }}>
+        예산 <b style={{ color: "#0A1E33" }}>{eok(d.value)}억원</b>
       </div>
     </div>
   );
@@ -41,13 +50,22 @@ function ChartTooltip({
 export default function BudgetBarChart({ data }: { data: ChartDatum[] }) {
   if (!data.length) {
     return (
-      <div className="flex h-72 items-center justify-center text-sm text-slate-400">
+      <div
+        style={{
+          height: 288,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          color: "#7B7875",
+        }}
+      >
         표시할 데이터가 없습니다.
       </div>
     );
   }
   return (
-    <div className="h-72 w-full">
+    <div style={{ height: 288, width: "100%" }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}

@@ -11,11 +11,12 @@ export const UNSET = "미분류";
 
 // 회사 컬러(_v2/tokens.css)와 동일 hex. SVG fill은 var()를 못 받으므로 hex로 둔다.
 // primary / dark-blue / sky / ink-deep / grey
+// 4분류 단계감 최대화 (primary → sky → dark-blue → ink-deep): 어두운 두 색이 인접하지 않게.
 export const CAT_HEX: Record<string, string> = {
-  "소상공인 지원": "#006CB7", // --c-primary
-  "세대별 맞춤 지원": "#26257C", // --c-dark-blue
-  "사회 혁신 조직 지원": "#58C5FF", // --c-sky
-  "공익 인프라 지원": "#0A1E33", // --c-ink-deep
+  "소상공인 지원": "#006CB7", // --c-primary (파랑)
+  "세대별 맞춤 지원": "#58C5FF", // --c-sky (연파랑)
+  "사회 혁신 조직 지원": "#26257C", // --c-dark-blue (인디고)
+  "공익 인프라 지원": "#0A1E33", // --c-ink-deep (먹)
   [UNSET]: "#7B7875", // --c-grey
 };
 
