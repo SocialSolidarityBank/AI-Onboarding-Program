@@ -277,14 +277,32 @@
   line-height: 1.5;
 }
 
-/* 백서 포함 토글 */
-.wpToggle {
-  display: flex;
+/* 기준 다중선택 체크박스 그룹 */
+.basisGroup {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  padding: 7px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  white-space: nowrap;
+}
+.basisLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.basisChk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 13px;
   color: var(--text-main);
-  white-space: nowrap;
+  cursor: pointer;
+}
+.basisChk input {
+  cursor: pointer;
 }
 
 /* 체크박스 열 */

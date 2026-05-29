@@ -79,12 +79,25 @@ export default function DataExplorer({
 
   const [tab, setTab] = useState<"table" | "dashboard">("table");
   const [q, setQ] = useState("");
-  const [basis, setBasis] = useState("");
+  // 기준 다중 선택 (체크된 기준만 표시).
+  // 레이어 모델: 정제 레이어=보고서(2023-2025)+백서(2003-2022), 원본 레이어=원장.
+  // 기본=정제 레이어 전체(보고서+백서). 원장은 같은 기간을 정제 전 raw로 적은 것이라
+  // 보고서와 함께 합산하면 이중계상 → 합계 시 한 레이어만.
+  const [bases, setBases] = useState<Set<string>>(
+    () => new Set(["report", "whitepaper"])
+  );
   const [year, setYear] = useState("");
   const [area, setArea] = useState("");
   const [tagFilter, setTagFilter] = useState("");
-  const [includeWP, setIncludeWP] = useState(false);
   const [selected, setSelected] = useState<ProgramRow | null>(null);
+
+  const toggleBasis = (b: string) =>
+    setBases((prev) => {
+      const next = new Set(prev);
+      if (next.has(b)) next.delete(b);
+      else next.add(b);
+      return next;
+    });
 
   // 다중선택 + 태깅
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -114,8 +127,8 @@ export default function DataExplorer({
   const rows = useMemo(() => {
     const query = q.trim().toLowerCase();
     return programs.filter((r) => {
-      if (!includeWP && r.basis === "whitepaper") return false;
-      if (basis && r.basis !== basis) return false;
+      // 체크된 기준만 표시 (하나도 안 고르면 전체 표시)
+      if (bases.size > 0 && !bases.has(r.basis)) return false;
       if (year && String(r.report_year) !== year) return false;
       if (area && r.area_name !== area) return false;
       if (tagFilter && !(r.tags ?? []).includes(tagFilter)) return false;
@@ -127,13 +140,13 @@ export default function DataExplorer({
       }
       return true;
     });
-  }, [programs, q, basis, year, area, tagFilter, includeWP]);
+  }, [programs, q, bases, year, area, tagFilter]);
 
   const sum = rows.reduce((s, r) => s + (r.budget_krw ?? 0), 0);
 
   const resetFilters = () => {
     setQ("");
-    setBasis("");
+    setBases(new Set(["report", "whitepaper"]));
     setYear("");
     setArea("");
     setTagFilter("");
@@ -226,12 +239,33 @@ export default function DataExplorer({
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <select className={styles.sel} value={basis} onChange={(e) => setBasis(e.target.value)}>
-            <option value="">전체 기준</option>
-            <option value="report">보고서</option>
-            <option value="ledger">원장</option>
-            {includeWP ? <option value="whitepaper">백서(누적)</option> : null}
-          </select>
+          <span className={styles.basisGroup}>
+            <span className={styles.basisLabel}>기준</span>
+            <label className={styles.basisChk}>
+              <input
+                type="checkbox"
+                checked={bases.has("report")}
+                onChange={() => toggleBasis("report")}
+              />
+              보고서
+            </label>
+            <label className={styles.basisChk}>
+              <input
+                type="checkbox"
+                checked={bases.has("ledger")}
+                onChange={() => toggleBasis("ledger")}
+              />
+              원장
+            </label>
+            <label className={styles.basisChk}>
+              <input
+                type="checkbox"
+                checked={bases.has("whitepaper")}
+                onChange={() => toggleBasis("whitepaper")}
+              />
+              백서(누적)
+            </label>
+          </span>
           <select className={styles.sel} value={year} onChange={(e) => setYear(e.target.value)}>
             <option value="">전체 연도</option>
             {years.map((y) => (
@@ -260,19 +294,8 @@ export default function DataExplorer({
               </option>
             ))}
           </select>
-          <label className={styles.wpToggle}>
-            <input
-              type="checkbox"
-              checked={includeWP}
-              onChange={(e) => {
-                setIncludeWP(e.target.checked);
-                if (!e.target.checked && basis === "whitepaper") setBasis("");
-              }}
-            />
-            백서(누적) 포함
-          </label>
           <button className={styles.reset} onClick={resetFilters}>
-            초기화
+            필터 초기화
           </button>
         </div>
       </div>
@@ -294,7 +317,11 @@ export default function DataExplorer({
           msg={msg}
         />
       ) : (
-        <Dashboard rows={rows} areaSummary={areaSummary} includeWP={includeWP} />
+        <Dashboard
+          rows={rows}
+          areaSummary={areaSummary}
+          bothReportLedger={bases.has("report") && bases.has("ledger")}
+        />
       )}
 
       {selected ? (
@@ -347,10 +374,13 @@ function TableView({
           <input
             className={styles.tagInput}
             list="all-tags"
-            placeholder="태그 입력 (예: 재단지원)"
+            placeholder="태그 입력 (예: 소상공인 지원)"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             disabled={pending}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !pending) runTag("add");
+            }}
           />
           <datalist id="all-tags">
             {allTags.map((t) => (
@@ -362,16 +392,16 @@ function TableView({
             onClick={() => runTag("add")}
             disabled={pending}
           >
-            태그 추가
+            {pending ? "저장 중…" : "저장"}
           </button>
           <button
             className={styles.tagRemove}
             onClick={() => runTag("remove")}
             disabled={pending}
+            title="선택한 사업에서 이 태그를 제거합니다"
           >
-            태그 제거
+            선택 항목에서 빼기
           </button>
-          {pending ? <span className={styles.muted}>저장 중…</span> : null}
         </div>
       ) : null}
       {msg ? <p className={styles.msg}>{msg}</p> : null}
@@ -454,11 +484,11 @@ function TableView({
 function Dashboard({
   rows,
   areaSummary,
-  includeWP,
+  bothReportLedger,
 }: {
   rows: ProgramRow[];
   areaSummary: AreaSummaryRow[];
-  includeWP: boolean;
+  bothReportLedger: boolean;
 }) {
   // 단위별 지원수 합계 (단위 섞임 방지)
   const byUnit = useMemo(() => {
@@ -526,15 +556,17 @@ function Dashboard({
 
   return (
     <div className={`container ${styles.dash}`}>
-      {!includeWP ? (
-        <p className={styles.dashNote}>
-          백서(2003–2022 누적)는 합산·대조에서 제외돼 있습니다. 필터 바의
-          “백서(누적) 포함”을 켜면 누적 데이터도 볼 수 있습니다.
+      {bothReportLedger ? (
+        <p className={styles.dashWarn}>
+          ⚠ 보고서와 원장을 함께 선택했습니다. 둘은 같은 활동의 두 기록(원장=재무결산
+          원본, 보고서=정제본)이라 합계가 <b>이중계상</b>됩니다. 정확한 합계를 보려면
+          기준에서 하나만 선택하세요.
         </p>
       ) : (
-        <p className={styles.dashWarn}>
-          ⚠ 백서(누적)가 포함돼 있습니다. 연도별 실적과 합치면 이중계상될 수 있으니
-          참고용으로만 보세요.
+        <p className={styles.dashNote}>
+          정제 레이어(보고서 2023–2025 + 백서 2003–2022)를 합산 중입니다 — 둘은 같은
+          레이어라 연도가 겹치지 않아 함께 더하면 2003–2025 전체 흐름이 됩니다. 원장은
+          같은 기간을 정제 전 원본으로 적은 별도 레이어라, 보고서와 함께 더하면 중복됩니다.
         </p>
       )}
 
