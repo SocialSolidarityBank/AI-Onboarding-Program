@@ -9,6 +9,32 @@ export type TagResult =
 
 type ProgramKey = { id: string; basis: string };
 
+// 표준분류(category_std) 단일값 설정 — replace 의미. null/'' 이면 분류 해제.
+export async function setCategory(
+  keys: ProgramKey[],
+  category: string | null
+): Promise<TagResult> {
+  if (!keys.length) return { ok: false, message: "선택된 사업이 없습니다." };
+
+  const supabase = await getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "로그인이 만료되었습니다. 다시 로그인해 주세요." };
+
+  const { data, error } = await supabase.rpc("programs_set_category", {
+    p_keys: keys,
+    p_category: category && category.trim() ? category.trim() : null,
+  });
+
+  if (error) {
+    return { ok: false, message: `표준분류 저장 실패: ${error.message}` };
+  }
+
+  revalidatePath("/data");
+  return { ok: true, affected: (data as number) ?? 0 };
+}
+
 export async function applyTag(
   keys: ProgramKey[],
   tag: string,

@@ -23,7 +23,7 @@ export default async function DataPage() {
     supabase
       .from("programs")
       .select(
-        "program_id,basis,report_year,area_code,area_name,program_name,period,headline_value,headline_unit,budget_krw,target,support_type,source_document,memo,funders,details,kpis,tags"
+        "program_id,basis,report_year,area_code,area_name,program_name,period,headline_value,headline_unit,budget_krw,target,support_type,source_document,memo,funders,details,kpis,tags,category_std"
       )
       .order("report_year", { ascending: false })
       .order("area_code"),

@@ -1,3 +1,10 @@
+/*
+ * 타입 스케일 (기준 16px)
+ *  - 본문·표·라벨·칩·배지·캡션 등 거의 모든 텍스트: 16px
+ *  - 위계는 크기 대신 굵기(font-weight)·색(color)으로 표현
+ *  - 강조 크기 3종만 예외: 소제목 18 / 드로어 제목 20 / 카드 지표 숫자 28
+ *  - 16px 미만 금지 (사이트 디자인 시스템의 ≥16px 규칙 준수)
+ */
 .page {
   min-height: 100vh;
   background: var(--bg);
@@ -27,7 +34,7 @@
 }
 .who {
   margin-left: auto;
-  font-size: 13px;
+  font-size: 16px;
   opacity: 0.85;
 }
 
@@ -101,9 +108,22 @@
   font: inherit;
 }
 
+/* 상단 고정 툴바 (count + 설정바 + 메시지) — barWrap 안에 함께 sticky */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--card-border);
+}
+/* 표 본문 영역: 고정 헤더 아래 여백 */
+.tablePane {
+  padding-top: 14px;
+}
+
 .count {
-  padding: 16px 0 10px;
-  font-size: 14px;
+  margin: 0;
+  font-size: 16px;
   color: var(--text-muted);
 }
 .count b {
@@ -111,21 +131,21 @@
 }
 .muted {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 /* 표 */
 .tableWrap {
   border: 1px solid var(--card-border);
   border-radius: 10px;
-  overflow: hidden;
+  overflow-x: auto;
   background: var(--color-white);
 }
 .table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 14px;
+  font-size: 16px;
 }
 .table th,
 .table td {
@@ -134,11 +154,14 @@
   text-align: left;
   vertical-align: top;
 }
+.table td {
+  font-size: 15px; /* 행 데이터는 15px (헤더 16px) */
+}
 .table th {
   background: var(--color-bg-dark);
   color: var(--color-white);
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: 16px;
 }
 .table tbody tr:hover {
   background: rgba(0, 108, 183, 0.06);
@@ -155,15 +178,15 @@
 }
 .sub {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 2px;
 }
 
 .tag {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 20px;
-  font-size: 11.5px;
+  font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -190,7 +213,7 @@
 }
 .gateWho {
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 16px;
   margin: 16px 0;
 }
 .gateLink {
@@ -224,22 +247,22 @@
   background: var(--color-white);
   border-radius: 7px;
   padding: 6px 11px;
-  font-size: 13px;
+  font-size: 16px;
 }
 .dTitle {
   margin: 0 40px 2px 0;
-  font-size: 18px;
+  font-size: 20px;
 }
 .dMeta {
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: 16px;
   margin-bottom: 16px;
 }
 .kv {
   display: grid;
   grid-template-columns: 96px 1fr;
   gap: 6px 10px;
-  font-size: 13px;
+  font-size: 16px;
   margin-bottom: 8px;
 }
 .kv dt {
@@ -247,13 +270,13 @@
 }
 .sec {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 18px;
   margin: 16px 0 8px;
   border-top: 1px solid var(--card-border);
   padding-top: 14px;
 }
 .dt {
-  font-size: 12.5px;
+  font-size: 16px;
   border: 1px solid var(--card-border);
   border-radius: 7px;
   padding: 8px 10px;
@@ -263,7 +286,7 @@
   font-variant-numeric: tabular-nums;
 }
 .agg {
-  font-size: 11px;
+  font-size: 16px;
   color: var(--text-muted);
   margin-left: 6px;
 }
@@ -272,7 +295,7 @@
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 12.5px;
+  font-size: 16px;
   white-space: pre-wrap;
   line-height: 1.5;
 }
@@ -289,7 +312,7 @@
   white-space: nowrap;
 }
 .basisLabel {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -297,7 +320,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-main);
   cursor: pointer;
 }
@@ -324,14 +347,14 @@
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  margin: 6px 0 12px;
+  margin: 0;
   background: rgba(0, 108, 183, 0.06);
   border: 1px solid var(--card-border);
   border-radius: 10px;
 }
 .tagBarCount {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 16px;
 }
 .tagInput {
   flex: 1;
@@ -366,9 +389,9 @@
   cursor: default;
 }
 .msg {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-main);
-  margin: 4px 0 12px;
+  margin: 0;
 }
 
 /* 태그 칩 */
@@ -380,9 +403,9 @@
 }
 .chip {
   display: inline-block;
-  padding: 1px 8px;
+  padding: 2px 9px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   background: #eef3f0;
   color: #2d6a4f;
@@ -394,12 +417,12 @@
   padding-top: 18px;
 }
 .dashNote {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-muted);
   margin-bottom: 14px;
 }
 .dashWarn {
-  font-size: 13px;
+  font-size: 16px;
   color: #8a5a14;
   background: #fbeede;
   border: 1px solid #e6cfa6;
@@ -420,18 +443,18 @@
   padding: 16px 18px;
 }
 .cardLabel {
-  font-size: 12.5px;
+  font-size: 16px;
   color: var(--text-muted);
   margin-bottom: 6px;
 }
 .cardValue {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--color-bg-dark, #2c3e50);
 }
 .cardSub {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-muted);
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
@@ -444,14 +467,14 @@
 .unitRow {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
 .unitName {
   color: var(--text-muted);
 }
 .dashH {
-  font-size: 16px;
+  font-size: 18px;
   margin: 8px 0 4px;
 }
 
@@ -460,9 +483,9 @@
 .badgeDiff,
 .badgeNa {
   display: inline-block;
-  padding: 2px 9px;
+  padding: 3px 10px;
   border-radius: 20px;
-  font-size: 11.5px;
+  font-size: 16px;
   font-weight: 700;
 }
 .badgeOk {

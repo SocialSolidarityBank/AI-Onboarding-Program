@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import styles from "./page.module.css";
-import { applyTag } from "./actions";
+import { setCategory } from "./actions";
 
 type Funder = {
   funder?: string;
@@ -39,7 +39,17 @@ export type ProgramRow = {
   details: Detail[] | null;
   kpis: Kpi[] | null;
   tags: string[] | null;
+  category_std: string | null;
 };
+
+// 표준 4분류 (단일 분류, 교체 가능). 원본 분류는 area_name(보고서 원문).
+const CATEGORIES = [
+  "소상공인 지원",
+  "세대별 맞춤 지원",
+  "사회 혁신 조직 지원",
+  "공익 인프라 지원",
+] as const;
+const UNSET = "미분류";
 
 export type AreaSummaryRow = {
   basis: string;
@@ -88,7 +98,7 @@ export default function DataExplorer({
   );
   const [year, setYear] = useState("");
   const [area, setArea] = useState("");
-  const [tagFilter, setTagFilter] = useState("");
+  const [catFilter, setCatFilter] = useState("");
   const [selected, setSelected] = useState<ProgramRow | null>(null);
 
   const toggleBasis = (b: string) =>
@@ -99,9 +109,9 @@ export default function DataExplorer({
       return next;
     });
 
-  // 다중선택 + 태깅
+  // 다중선택 + 표준분류 설정
   const [picked, setPicked] = useState<Set<string>>(new Set());
-  const [tagInput, setTagInput] = useState("");
+  const [catInput, setCatInput] = useState(""); // 설정 드롭다운 값, ""=분류 해제
   const [msg, setMsg] = useState<string>("");
 
   const years = useMemo(
@@ -116,13 +126,6 @@ export default function DataExplorer({
       [...new Set(programs.map((p) => p.area_name).filter((a): a is string => !!a))].sort(),
     [programs]
   );
-  const allTags = useMemo(
-    () =>
-      [...new Set(programs.flatMap((p) => p.tags ?? []))].sort((a, b) =>
-        a.localeCompare(b, "ko-KR")
-      ),
-    [programs]
-  );
 
   const rows = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -131,16 +134,20 @@ export default function DataExplorer({
       if (bases.size > 0 && !bases.has(r.basis)) return false;
       if (year && String(r.report_year) !== year) return false;
       if (area && r.area_name !== area) return false;
-      if (tagFilter && !(r.tags ?? []).includes(tagFilter)) return false;
+      if (catFilter) {
+        if (catFilter === UNSET) {
+          if (r.category_std) return false;
+        } else if (r.category_std !== catFilter) return false;
+      }
       if (query) {
         const hay = `${r.program_name ?? ""} ${r.memo ?? ""} ${(r.funders ?? [])
           .map((f) => f.funder ?? "")
-          .join(" ")} ${r.support_type ?? ""} ${(r.tags ?? []).join(" ")}`.toLowerCase();
+          .join(" ")} ${r.support_type ?? ""} ${r.category_std ?? ""}`.toLowerCase();
         if (!hay.includes(query)) return false;
       }
       return true;
     });
-  }, [programs, q, bases, year, area, tagFilter]);
+  }, [programs, q, bases, year, area, catFilter]);
 
   const sum = rows.reduce((s, r) => s + (r.budget_krw ?? 0), 0);
 
@@ -149,7 +156,7 @@ export default function DataExplorer({
     setBases(new Set(["report", "whitepaper"]));
     setYear("");
     setArea("");
-    setTagFilter("");
+    setCatFilter("");
   };
 
   // ── 다중선택 헬퍼 ──
@@ -171,27 +178,26 @@ export default function DataExplorer({
       return next;
     });
 
-  const runTag = (op: "add" | "remove") => {
-    const tag = tagInput.trim();
-    if (!tag) {
-      setMsg("태그를 입력해 주세요.");
-      return;
-    }
-    const keys = rows
+  const runSetCategory = () => {
+    // 버그 수정: 선택 키를 필터된 rows가 아니라 전체 programs에서 추출.
+    // (필터를 바꿔 화면에서 사라진 선택도 누락 없이 저장)
+    const keys = programs
       .filter((r) => picked.has(keyOf(r)))
       .map((r) => ({ id: r.program_id, basis: r.basis }));
     if (!keys.length) {
       setMsg("선택된 사업이 없습니다.");
       return;
     }
+    const cat = catInput.trim() || null; // "" → 분류 해제
     setMsg("");
     startTransition(async () => {
-      const res = await applyTag(keys, tag, op);
+      const res = await setCategory(keys, cat);
       if (res.ok) {
         setMsg(
-          `'${tag}' 태그 ${op === "add" ? "추가" : "제거"} 완료 — ${res.affected}건 반영`
+          cat
+            ? `'${cat}' 표준분류 설정 완료 — ${res.affected}건 반영`
+            : `표준분류 해제 완료 — ${res.affected}건 반영`
         );
-        setTagInput("");
         setPicked(new Set());
         router.refresh();
       } else {
@@ -235,7 +241,7 @@ export default function DataExplorer({
           <input
             className={styles.search}
             type="search"
-            placeholder="사업명·메모·기금처·태그 검색…"
+            placeholder="사업명·메모·기금처·표준분류 검색…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -284,37 +290,68 @@ export default function DataExplorer({
           </select>
           <select
             className={styles.sel}
-            value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value)}
+            value={catFilter}
+            onChange={(e) => setCatFilter(e.target.value)}
           >
-            <option value="">전체 태그</option>
-            {allTags.map((t) => (
-              <option key={t} value={t}>
-                #{t}
+            <option value="">전체 표준분류</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
               </option>
             ))}
+            <option value={UNSET}>{UNSET}</option>
           </select>
           <button className={styles.reset} onClick={resetFilters}>
             필터 초기화
           </button>
         </div>
+
+        {tab === "table" ? (
+          <div className={`container ${styles.toolbar}`}>
+            <p className={styles.count}>
+              <b>{rows.length}</b>개 사업 · 예산 합계 <b>{fmt(sum)}</b>원 (약 {eok(sum)}억){" "}
+              <span className={styles.muted}>— 기준·단위가 섞이면 단순 합계는 참고용</span>
+            </p>
+            {picked.size > 0 ? (
+              <div className={styles.tagBar}>
+                <span className={styles.tagBarCount}>
+                  {picked.size}건 선택 · 표준분류 설정
+                </span>
+                <select
+                  className={styles.sel}
+                  value={catInput}
+                  onChange={(e) => setCatInput(e.target.value)}
+                  disabled={pending}
+                >
+                  <option value="">— 분류 해제 —</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className={styles.tagAdd}
+                  onClick={runSetCategory}
+                  disabled={pending}
+                >
+                  {pending ? "저장 중…" : "저장"}
+                </button>
+              </div>
+            ) : null}
+            {msg ? <p className={styles.msg}>{msg}</p> : null}
+          </div>
+        ) : null}
       </div>
 
       {tab === "table" ? (
         <TableView
           rows={rows}
-          sum={sum}
           picked={picked}
           allVisiblePicked={allVisiblePicked}
           toggleOne={toggleOne}
           toggleAllVisible={toggleAllVisible}
           onSelect={setSelected}
-          tagInput={tagInput}
-          setTagInput={setTagInput}
-          allTags={allTags}
-          runTag={runTag}
-          pending={pending}
-          msg={msg}
         />
       ) : (
         <Dashboard
@@ -333,79 +370,21 @@ export default function DataExplorer({
 
 function TableView({
   rows,
-  sum,
   picked,
   allVisiblePicked,
   toggleOne,
   toggleAllVisible,
   onSelect,
-  tagInput,
-  setTagInput,
-  allTags,
-  runTag,
-  pending,
-  msg,
 }: {
   rows: ProgramRow[];
-  sum: number;
   picked: Set<string>;
   allVisiblePicked: boolean;
   toggleOne: (k: string) => void;
   toggleAllVisible: () => void;
   onSelect: (r: ProgramRow) => void;
-  tagInput: string;
-  setTagInput: (v: string) => void;
-  allTags: string[];
-  runTag: (op: "add" | "remove") => void;
-  pending: boolean;
-  msg: string;
 }) {
   return (
-    <div className="container">
-      <p className={styles.count}>
-        <b>{rows.length}</b>개 사업 · 예산 합계 <b>{fmt(sum)}</b>원 (약 {eok(sum)}억){" "}
-        <span className={styles.muted}>— 기준·단위가 섞이면 단순 합계는 참고용</span>
-      </p>
-
-      {/* 일괄 태깅 바 */}
-      {picked.size > 0 ? (
-        <div className={styles.tagBar}>
-          <span className={styles.tagBarCount}>{picked.size}건 선택</span>
-          <input
-            className={styles.tagInput}
-            list="all-tags"
-            placeholder="태그 입력 (예: 소상공인 지원)"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            disabled={pending}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !pending) runTag("add");
-            }}
-          />
-          <datalist id="all-tags">
-            {allTags.map((t) => (
-              <option key={t} value={t} />
-            ))}
-          </datalist>
-          <button
-            className={styles.tagAdd}
-            onClick={() => runTag("add")}
-            disabled={pending}
-          >
-            {pending ? "저장 중…" : "저장"}
-          </button>
-          <button
-            className={styles.tagRemove}
-            onClick={() => runTag("remove")}
-            disabled={pending}
-            title="선택한 사업에서 이 태그를 제거합니다"
-          >
-            선택 항목에서 빼기
-          </button>
-        </div>
-      ) : null}
-      {msg ? <p className={styles.msg}>{msg}</p> : null}
-
+    <div className={`container ${styles.tablePane}`}>
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -420,8 +399,8 @@ function TableView({
               </th>
               <th>연도</th>
               <th>기준</th>
-              <th>영역</th>
-              <th>사업명 / 태그</th>
+              <th>영역(원본)</th>
+              <th>사업명 / 표준분류</th>
               <th className={styles.num}>지원수</th>
               <th className={styles.num}>예산(원)</th>
               <th className={styles.num}>억</th>
@@ -450,15 +429,13 @@ function TableView({
                   <td onClick={() => onSelect(r)}>
                     <div className={styles.pname}>{r.program_name}</div>
                     {r.period ? <div className={styles.sub}>{r.period}</div> : null}
-                    {r.tags && r.tags.length ? (
-                      <div className={styles.chips}>
-                        {r.tags.map((t) => (
-                          <span key={t} className={styles.chip}>
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
+                    <div className={styles.chips}>
+                      {r.category_std ? (
+                        <span className={styles.chip}>{r.category_std}</span>
+                      ) : (
+                        <span className={styles.sub}>미분류</span>
+                      )}
+                    </div>
                   </td>
                   <td className={styles.num} onClick={() => onSelect(r)}>
                     {r.headline_value != null
@@ -501,6 +478,21 @@ function Dashboard({
   }, [rows]);
 
   const budgetSum = rows.reduce((s, r) => s + (r.budget_krw ?? 0), 0);
+
+  // 표준분류별 요약 (현재 필터 기준)
+  const byCategory = useMemo(() => {
+    const m = new Map<string, { n: number; budget: number }>();
+    for (const r of rows) {
+      const key = r.category_std ?? UNSET;
+      const cur = m.get(key) ?? { n: 0, budget: 0 };
+      cur.n += 1;
+      cur.budget += r.budget_krw ?? 0;
+      m.set(key, cur);
+    }
+    return [...CATEGORIES, UNSET]
+      .map((c) => ({ cat: c, ...(m.get(c) ?? { n: 0, budget: 0 }) }))
+      .filter((x) => x.n > 0);
+  }, [rows]);
 
   // 내 합계 vs 공식 합계: (basis, report_year, area_code) 기준 그룹 비교.
   // 백서는 area_summary에 없고 누적이므로 대조에서 제외.
@@ -598,6 +590,44 @@ function Dashboard({
         </div>
       </div>
 
+      {/* 표준분류별 요약 */}
+      <h3 className={styles.dashH}>표준분류별 요약</h3>
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>표준분류</th>
+              <th className={styles.num}>사업수</th>
+              <th className={styles.num}>예산(원)</th>
+              <th className={styles.num}>억</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byCategory.map((x) => (
+              <tr key={x.cat}>
+                <td>
+                  {x.cat === UNSET ? (
+                    <span className={styles.sub}>미분류</span>
+                  ) : (
+                    <span className={styles.chip}>{x.cat}</span>
+                  )}
+                </td>
+                <td className={styles.num}>{x.n}</td>
+                <td className={styles.num}>{fmt(x.budget)}</td>
+                <td className={styles.num}>{eok(x.budget)}</td>
+              </tr>
+            ))}
+            {byCategory.length === 0 ? (
+              <tr>
+                <td colSpan={4} className={styles.sub}>
+                  표시할 사업이 없습니다.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+
       {/* 대조: 내 합계 vs 공식 합계 */}
       <h3 className={styles.dashH}>내 합계 vs 공식 합계 (area_summary)</h3>
       <p className={styles.muted}>
@@ -669,7 +699,6 @@ function Drawer({ row, onClose }: { row: ProgramRow; onClose: () => void }) {
   const details = row.details ?? [];
   const funders = row.funders ?? [];
   const kpis = row.kpis ?? [];
-  const tags = row.tags ?? [];
   return (
     <>
       <div className={styles.ov} onClick={onClose} />
@@ -685,18 +714,18 @@ function Drawer({ row, onClose }: { row: ProgramRow; onClose: () => void }) {
           </span>
         </p>
 
-        {tags.length ? (
-          <div className={styles.chips}>
-            {tags.map((t) => (
-              <span key={t} className={styles.chip}>
-                #{t}
-              </span>
-            ))}
-          </div>
-        ) : null}
+        <div className={styles.chips}>
+          {row.category_std ? (
+            <span className={styles.chip}>{row.category_std}</span>
+          ) : (
+            <span className={styles.sub}>미분류</span>
+          )}
+        </div>
 
         <dl className={styles.kv}>
-          <dt>영역</dt>
+          <dt>표준분류</dt>
+          <dd>{row.category_std ?? "미분류"}</dd>
+          <dt>영역(원본)</dt>
           <dd>
             {row.area_name ?? "—"} ({row.area_code})
           </dd>
