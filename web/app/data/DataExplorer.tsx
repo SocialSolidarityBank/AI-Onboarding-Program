@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import styles from "./page.module.css";
 import { setCategory } from "./actions";
+import BudgetBarChart from "./charts/BudgetBarChart";
+import { CATEGORIES, UNSET, catHex, unitLabel } from "./categories";
 
 type Funder = {
   funder?: string;
@@ -42,15 +44,6 @@ export type ProgramRow = {
   category_std: string | null;
 };
 
-// 표준 4분류 (단일 분류, 교체 가능). 원본 분류는 area_name(보고서 원문).
-const CATEGORIES = [
-  "소상공인 지원",
-  "세대별 맞춤 지원",
-  "사회 혁신 조직 지원",
-  "공익 인프라 지원",
-] as const;
-const UNSET = "미분류";
-
 export type AreaSummaryRow = {
   basis: string;
   report_year: number | null;
@@ -65,15 +58,36 @@ const BLABEL: Record<string, string> = {
   whitepaper: "백서(누적)",
 };
 
+// 일반 숫자 (건수·지원수 등)
 const fmt = (n: number | null | undefined) =>
   n == null ? "—" : Number(n).toLocaleString("ko-KR");
-const eok = (n: number | null | undefined) =>
+// 정확한 원 단위 (per-row·상세)
+const won = (n: number | null | undefined) =>
+  n == null ? "—" : Number(n).toLocaleString("ko-KR") + "원";
+// 반올림 억원 (요약·합계·차트) — 원과 같은 줄에 쓰지 않는다
+const eokwon = (n: number | null | undefined) =>
   n == null
     ? "—"
-    : (Number(n) / 1e8).toLocaleString("ko-KR", { maximumFractionDigits: 1 });
+    : (Number(n) / 1e8).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
+      "억원";
+
+// 백서(2003-2022 누적)는 report_year가 2022지만 표시는 기간으로
+const yearLabel = (r: { basis: string; report_year: number | null }) =>
+  r.basis === "whitepaper" ? "2003–2022" : r.report_year ?? "—";
 
 const keyOf = (r: { program_id: string; basis: string }) =>
   `${r.program_id}::${r.basis}`;
+
+// 표준분류 컬러 닷 + 라벨 (그래프와 통일감)
+function CatChip({ cat }: { cat: string | null }) {
+  if (!cat) return <span className={styles.unsetText}>미분류</span>;
+  return (
+    <span className={styles.catChip}>
+      <span className={styles.catDot} style={{ background: catHex(cat) }} />
+      {cat}
+    </span>
+  );
+}
 
 export default function DataExplorer({
   programs,
@@ -276,7 +290,7 @@ export default function DataExplorer({
             <option value="">전체 연도</option>
             {years.map((y) => (
               <option key={y} value={String(y)}>
-                {y}
+                {y === 2022 ? "2003–2022" : y}
               </option>
             ))}
           </select>
@@ -309,7 +323,8 @@ export default function DataExplorer({
         {tab === "table" ? (
           <div className={`container ${styles.toolbar}`}>
             <p className={styles.count}>
-              <b>{rows.length}</b>개 사업 · 예산 합계 <b>{fmt(sum)}</b>원 (약 {eok(sum)}억){" "}
+              <b>{fmt(rows.length)}</b>개 사업 · 예산 합계{" "}
+              <b className={styles.num}>{eokwon(sum)}</b>{" "}
               <span className={styles.muted}>— 기준·단위가 섞이면 단순 합계는 참고용</span>
             </p>
             {picked.size > 0 ? (
@@ -401,9 +416,8 @@ function TableView({
               <th>기준</th>
               <th>영역(원본)</th>
               <th>사업명 / 표준분류</th>
-              <th className={styles.num}>지원수</th>
-              <th className={styles.num}>예산(원)</th>
-              <th className={styles.num}>억</th>
+              <th className={styles.num}>지원 수</th>
+              <th className={styles.num}>예산</th>
             </tr>
           </thead>
           <tbody>
@@ -419,7 +433,7 @@ function TableView({
                       aria-label="선택"
                     />
                   </td>
-                  <td onClick={() => onSelect(r)}>{r.report_year ?? "—"}</td>
+                  <td onClick={() => onSelect(r)}>{yearLabel(r)}</td>
                   <td onClick={() => onSelect(r)}>
                     <span className={`${styles.tag} ${styles["b_" + r.basis]}`}>
                       {BLABEL[r.basis]}
@@ -430,23 +444,16 @@ function TableView({
                     <div className={styles.pname}>{r.program_name}</div>
                     {r.period ? <div className={styles.sub}>{r.period}</div> : null}
                     <div className={styles.chips}>
-                      {r.category_std ? (
-                        <span className={styles.chip}>{r.category_std}</span>
-                      ) : (
-                        <span className={styles.sub}>미분류</span>
-                      )}
+                      <CatChip cat={r.category_std} />
                     </div>
                   </td>
-                  <td className={styles.num} onClick={() => onSelect(r)}>
+                  <td className={`${styles.num} ${styles.numFont}`} onClick={() => onSelect(r)}>
                     {r.headline_value != null
                       ? fmt(r.headline_value) + (r.headline_unit ?? "")
                       : "—"}
                   </td>
-                  <td className={styles.num} onClick={() => onSelect(r)}>
-                    {fmt(r.budget_krw)}
-                  </td>
-                  <td className={styles.num} onClick={() => onSelect(r)}>
-                    {eok(r.budget_krw)}
+                  <td className={`${styles.num} ${styles.numFont}`} onClick={() => onSelect(r)}>
+                    {won(r.budget_krw)}
                   </td>
                 </tr>
               );
@@ -566,21 +573,29 @@ function Dashboard({
       <div className={styles.cards}>
         <div className={styles.card}>
           <div className={styles.cardLabel}>사업 개수</div>
-          <div className={styles.cardValue}>{fmt(rows.length)}개</div>
+          <div className={`${styles.cardValue} ${styles.numFont}`}>
+            {fmt(rows.length)}
+            <span className={styles.cardUnit}>개</span>
+          </div>
         </div>
         <div className={styles.card}>
           <div className={styles.cardLabel}>예산 합계</div>
-          <div className={styles.cardValue}>{eok(budgetSum)}억</div>
-          <div className={styles.cardSub}>{fmt(budgetSum)}원</div>
+          <div className={`${styles.cardValue} ${styles.numFont}`}>
+            {eokwon(budgetSum)}
+          </div>
+          <div className={`${styles.cardSub} ${styles.numFont}`}>{won(budgetSum)}</div>
         </div>
         <div className={styles.card}>
-          <div className={styles.cardLabel}>지원수 합계 (단위별)</div>
+          <div className={styles.cardLabel}>지원 수 합계 (단위별)</div>
           {byUnit.length ? (
             <div className={styles.unitList}>
               {byUnit.map(([u, v]) => (
                 <div key={u} className={styles.unitRow}>
-                  <span className={styles.unitName}>{u}</span>
-                  <b>{fmt(v)}</b>
+                  <span className={styles.unitName}>{unitLabel(u)}</span>
+                  <b className={styles.numFont}>
+                    {fmt(v)}
+                    <span className={styles.unitSuffix}>{u}</span>
+                  </b>
                 </div>
               ))}
             </div>
@@ -592,34 +607,31 @@ function Dashboard({
 
       {/* 표준분류별 요약 */}
       <h3 className={styles.dashH}>표준분류별 요약</h3>
+      <BudgetBarChart
+        data={byCategory.map((x) => ({ name: x.cat, value: x.budget }))}
+      />
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
               <th>표준분류</th>
-              <th className={styles.num}>사업수</th>
-              <th className={styles.num}>예산(원)</th>
-              <th className={styles.num}>억</th>
+              <th className={styles.num}>사업 수</th>
+              <th className={styles.num}>예산</th>
             </tr>
           </thead>
           <tbody>
             {byCategory.map((x) => (
               <tr key={x.cat}>
                 <td>
-                  {x.cat === UNSET ? (
-                    <span className={styles.sub}>미분류</span>
-                  ) : (
-                    <span className={styles.chip}>{x.cat}</span>
-                  )}
+                  <CatChip cat={x.cat === UNSET ? null : x.cat} />
                 </td>
-                <td className={styles.num}>{x.n}</td>
-                <td className={styles.num}>{fmt(x.budget)}</td>
-                <td className={styles.num}>{eok(x.budget)}</td>
+                <td className={`${styles.num} ${styles.numFont}`}>{fmt(x.n)}</td>
+                <td className={`${styles.num} ${styles.numFont}`}>{eokwon(x.budget)}</td>
               </tr>
             ))}
             {byCategory.length === 0 ? (
               <tr>
-                <td colSpan={4} className={styles.sub}>
+                <td colSpan={3} className={styles.sub}>
                   표시할 사업이 없습니다.
                 </td>
               </tr>
@@ -658,15 +670,15 @@ function Dashboard({
                 </td>
                 <td>{x.year}</td>
                 <td>{x.areaName}</td>
-                <td className={styles.num}>{x.n}</td>
-                <td className={styles.num}>{fmt(x.mineSum)}</td>
-                <td className={styles.num}>
-                  {x.offSum == null ? "공식치 없음" : fmt(x.offSum)}
+                <td className={`${styles.num} ${styles.numFont}`}>{fmt(x.n)}</td>
+                <td className={`${styles.num} ${styles.numFont}`}>{won(x.mineSum)}</td>
+                <td className={`${styles.num} ${styles.numFont}`}>
+                  {x.offSum == null ? "공식치 없음" : won(x.offSum)}
                 </td>
-                <td className={styles.num}>
+                <td className={`${styles.num} ${styles.numFont}`}>
                   {x.diff == null
                     ? "—"
-                    : `${x.diff >= 0 ? "+" : ""}${fmt(x.diff)}${
+                    : `${x.diff >= 0 ? "+" : ""}${won(x.diff)}${
                         Number.isFinite(x.pct) ? ` (${x.pct.toFixed(1)}%)` : ""
                       }`}
                 </td>
@@ -715,11 +727,7 @@ function Drawer({ row, onClose }: { row: ProgramRow; onClose: () => void }) {
         </p>
 
         <div className={styles.chips}>
-          {row.category_std ? (
-            <span className={styles.chip}>{row.category_std}</span>
-          ) : (
-            <span className={styles.sub}>미분류</span>
-          )}
+          <CatChip cat={row.category_std} />
         </div>
 
         <dl className={styles.kv}>
@@ -731,18 +739,21 @@ function Drawer({ row, onClose }: { row: ProgramRow; onClose: () => void }) {
           </dd>
           <dt>연도</dt>
           <dd>
-            {row.report_year ?? "—"}
+            {yearLabel(row)}
             {row.period ? ` · ${row.period}` : ""}
           </dd>
           <dt>대표실적</dt>
-          <dd>
+          <dd className={styles.numFont}>
             {row.headline_value != null
               ? fmt(row.headline_value) + (row.headline_unit ?? "")
               : "—"}
           </dd>
           <dt>예산</dt>
           <dd>
-            {fmt(row.budget_krw)}원 (약 {eok(row.budget_krw)}억)
+            <span className={styles.numFont}>{won(row.budget_krw)}</span>
+            {row.budget_krw != null ? (
+              <div className={`${styles.sub} ${styles.numFont}`}>{eokwon(row.budget_krw)}</div>
+            ) : null}
           </dd>
           <dt>대상</dt>
           <dd>{row.target || "—"}</dd>
