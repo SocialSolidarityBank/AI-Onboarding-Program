@@ -2,11 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import styles from "./page.module.css";
 import { setCategory } from "./actions";
 import BudgetBarChart from "./charts/BudgetBarChart";
-import { CATEGORIES, UNSET, catHex, unitLabel } from "./categories";
+import { CATEGORIES, UNSET, catHex, unitLabel, sortUnits } from "./categories";
+
+// 다크 모드 컨텍스트 — CatChip/차트가 색을 테마에 맞게 고른다.
+const DarkCtx = createContext(false);
 
 type Funder = {
   funder?: string;
@@ -53,18 +63,15 @@ export type AreaSummaryRow = {
 };
 
 const BLABEL: Record<string, string> = {
-  report: "보고서",
+  report: "연차보고서",
   ledger: "원장",
   whitepaper: "백서(누적)",
 };
 
-// 일반 숫자 (건수·지원수 등)
+// 일반 숫자 (상세 박스 내 세부값 등 — 문자열)
 const fmt = (n: number | null | undefined) =>
   n == null ? "—" : Number(n).toLocaleString("ko-KR");
-// 정확한 원 단위 (per-row·상세)
-const won = (n: number | null | undefined) =>
-  n == null ? "—" : Number(n).toLocaleString("ko-KR") + "원";
-// 반올림 억원 (요약·합계·차트) — 원과 같은 줄에 쓰지 않는다
+// 반올림 억원 (상단 요약 줄 — 문자열)
 const eokwon = (n: number | null | undefined) =>
   n == null
     ? "—"
@@ -78,11 +85,43 @@ const yearLabel = (r: { basis: string; report_year: number | null }) =>
 const keyOf = (r: { program_id: string; basis: string }) =>
   `${r.program_id}::${r.basis}`;
 
-// 표준분류 컬러 닷 + 라벨 (그래프와 통일 — 미분류도 회색 닷)
+// 숫자 강조: 볼드 + sky 컬러. 단위(명/원/억원)는 일반 텍스트로 분리해 구분.
+function Num({
+  value,
+  unit,
+}: {
+  value: number | null | undefined;
+  unit?: string;
+}) {
+  if (value == null) return <span className={styles.numDash}>-</span>;
+  return (
+    <span className={styles.numWrap}>
+      <span className={styles.numHi}>{Number(value).toLocaleString("ko-KR")}</span>
+      {unit ? <span className={styles.numUnit}>{unit}</span> : null}
+    </span>
+  );
+}
+function Won({ n }: { n: number | null | undefined }) {
+  return <Num value={n} unit="원" />;
+}
+function Eokwon({ n }: { n: number | null | undefined }) {
+  if (n == null) return <span className={styles.numDash}>-</span>;
+  return (
+    <span className={styles.numWrap}>
+      <span className={styles.numHi}>
+        {(Number(n) / 1e8).toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
+      </span>
+      <span className={styles.numUnit}>억원</span>
+    </span>
+  );
+}
+
+// 표준분류 컬러 닷 + 라벨 (그래프와 통일 — 미분류도 회색 닷, 다크 대응)
 function CatChip({ cat }: { cat: string | null }) {
+  const dark = useContext(DarkCtx);
   return (
     <span className={styles.catChip}>
-      <span className={styles.catDot} style={{ background: catHex(cat) }} />
+      <span className={styles.catDot} style={{ background: catHex(cat, dark) }} />
       <span className={cat ? undefined : styles.unsetText}>{cat ?? "미분류"}</span>
     </span>
   );
@@ -113,6 +152,33 @@ export default function DataExplorer({
   const [area, setArea] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [selected, setSelected] = useState<ProgramRow | null>(null);
+
+  // 다크 모드 (localStorage 유지)
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("data-theme") === "dark") setDark(true);
+    } catch {}
+  }, []);
+  const toggleDark = () =>
+    setDark((d) => {
+      const next = !d;
+      try {
+        localStorage.setItem("data-theme", next ? "dark" : "light");
+      } catch {}
+      return next;
+    });
+
+  // 지원수 단위 컬럼 (전체 데이터 기준 — 필터 바뀌어도 컬럼 고정)
+  const unitColumns = useMemo(
+    () =>
+      sortUnits([
+        ...new Set(
+          programs.map((p) => p.headline_unit).filter((u): u is string => !!u)
+        ),
+      ]),
+    [programs]
+  );
 
   const toggleBasis = (b: string) =>
     setBases((prev) => {
@@ -220,13 +286,23 @@ export default function DataExplorer({
   };
 
   return (
-    <main className={styles.page}>
+    <DarkCtx.Provider value={dark}>
+    <main className={styles.page} data-theme={dark ? "dark" : "light"}>
       <header className={styles.head}>
         <div className={`container ${styles.headRow}`}>
           <Link href="/" className={styles.brand}>
             ← 사업 데이터
           </Link>
-          <span className={styles.who}>{email}</span>
+          <div className={styles.headRight}>
+            <button
+              className={styles.themeBtn}
+              onClick={toggleDark}
+              aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+            >
+              {dark ? "☀ 라이트" : "🌙 다크"}
+            </button>
+            <span className={styles.who}>{email}</span>
+          </div>
         </div>
       </header>
 
@@ -364,6 +440,7 @@ export default function DataExplorer({
       {tab === "table" ? (
         <TableView
           rows={rows}
+          unitColumns={unitColumns}
           picked={picked}
           allVisiblePicked={allVisiblePicked}
           toggleOne={toggleOne}
@@ -375,6 +452,7 @@ export default function DataExplorer({
           rows={rows}
           areaSummary={areaSummary}
           bothReportLedger={bases.has("report") && bases.has("ledger")}
+          dark={dark}
         />
       )}
 
@@ -382,11 +460,13 @@ export default function DataExplorer({
         <Drawer row={selected} onClose={() => setSelected(null)} />
       ) : null}
     </main>
+    </DarkCtx.Provider>
   );
 }
 
 function TableView({
   rows,
+  unitColumns,
   picked,
   allVisiblePicked,
   toggleOne,
@@ -394,12 +474,50 @@ function TableView({
   onSelect,
 }: {
   rows: ProgramRow[];
+  unitColumns: string[];
   picked: Set<string>;
   allVisiblePicked: boolean;
   toggleOne: (k: string) => void;
   toggleAllVisible: () => void;
   onSelect: (r: ProgramRow) => void;
 }) {
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({
+    key: "",
+    dir: "asc",
+  });
+  const onSort = (key: string) =>
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" }
+    );
+  const caret = (key: string) =>
+    sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
+
+  const sorted = useMemo(() => {
+    if (!sort.key) return rows;
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const val = (r: ProgramRow): number | string | null => {
+      if (sort.key === "name") return r.program_name ?? "";
+      if (sort.key === "budget") return r.budget_krw;
+      if (sort.key.startsWith("unit:")) {
+        const u = sort.key.slice(5);
+        return r.headline_unit === u ? r.headline_value : null;
+      }
+      return null;
+    };
+    return [...rows].sort((a, b) => {
+      const va = val(a);
+      const vb = val(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1; // 값 없음은 항상 뒤로
+      if (vb == null) return -1;
+      if (typeof va === "string" || typeof vb === "string")
+        return String(va).localeCompare(String(vb), "ko-KR") * dir;
+      return (va - vb) * dir;
+    });
+  }, [rows, sort]);
+
   return (
     <div className={`container ${styles.tablePane}`}>
       <div className={styles.tableWrap}>
@@ -417,13 +535,36 @@ function TableView({
               <th>연도</th>
               <th>기준</th>
               <th>영역(원본)</th>
-              <th>사업명 / 표준분류</th>
-              <th className={styles.num}>지원 수</th>
-              <th className={styles.num}>예산</th>
+              <th>표준분류</th>
+              <th>
+                <button type="button" className={styles.sortBtn} onClick={() => onSort("name")}>
+                  사업명{caret("name")}
+                </button>
+              </th>
+              {unitColumns.map((u) => (
+                <th key={u} className={styles.num}>
+                  <button
+                    type="button"
+                    className={`${styles.sortBtn} ${styles.sortNum}`}
+                    onClick={() => onSort(`unit:${u}`)}
+                  >
+                    {unitLabel(u)}{caret(`unit:${u}`)}
+                  </button>
+                </th>
+              ))}
+              <th className={styles.num}>
+                <button
+                  type="button"
+                  className={`${styles.sortBtn} ${styles.sortNum}`}
+                  onClick={() => onSort("budget")}
+                >
+                  예산{caret("budget")}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => {
+            {sorted.map((r) => {
               const k = keyOf(r);
               return (
                 <tr
@@ -452,21 +593,31 @@ function TableView({
                       {BLABEL[r.basis]}
                     </span>
                   </td>
-                  <td onClick={() => onSelect(r)}>{r.area_name ?? "—"}</td>
+                  <td onClick={() => onSelect(r)}>
+                    {r.area_name ? (
+                      <span className={styles.areaTag}>{r.area_name}</span>
+                    ) : (
+                      <span className={styles.unsetText}>—</span>
+                    )}
+                  </td>
+                  <td onClick={() => onSelect(r)}>
+                    <CatChip cat={r.category_std} />
+                  </td>
                   <td onClick={() => onSelect(r)}>
                     <div className={styles.pname}>{r.program_name}</div>
                     {r.period ? <div className={styles.sub}>{r.period}</div> : null}
-                    <div className={styles.chips}>
-                      <CatChip cat={r.category_std} />
-                    </div>
                   </td>
-                  <td className={`${styles.num} ${styles.numFont}`} onClick={() => onSelect(r)}>
-                    {r.headline_value != null
-                      ? fmt(r.headline_value) + (r.headline_unit ?? "")
-                      : "—"}
-                  </td>
-                  <td className={`${styles.num} ${styles.numFont}`} onClick={() => onSelect(r)}>
-                    {won(r.budget_krw)}
+                  {unitColumns.map((u) => (
+                    <td key={u} className={styles.num} onClick={() => onSelect(r)}>
+                      {r.headline_unit === u && r.headline_value != null ? (
+                        <Num value={r.headline_value} />
+                      ) : (
+                        <span className={styles.numDash}>-</span>
+                      )}
+                    </td>
+                  ))}
+                  <td className={styles.num} onClick={() => onSelect(r)}>
+                    <Won n={r.budget_krw} />
                   </td>
                 </tr>
               );
@@ -482,10 +633,12 @@ function Dashboard({
   rows,
   areaSummary,
   bothReportLedger,
+  dark,
 }: {
   rows: ProgramRow[];
   areaSummary: AreaSummaryRow[];
   bothReportLedger: boolean;
+  dark: boolean;
 }) {
   // 단위별 지원수 합계 (단위 섞임 방지)
   const byUnit = useMemo(() => {
@@ -586,17 +739,18 @@ function Dashboard({
       <div className={styles.cards}>
         <div className={styles.card}>
           <div className={styles.cardLabel}>사업 개수</div>
-          <div className={`${styles.cardValue} ${styles.numFont}`}>
-            {fmt(rows.length)}
-            <span className={styles.cardUnit}>개</span>
+          <div className={styles.cardValue}>
+            <Num value={rows.length} unit="개" />
           </div>
         </div>
         <div className={styles.card}>
           <div className={styles.cardLabel}>예산 합계</div>
-          <div className={`${styles.cardValue} ${styles.numFont}`}>
-            {eokwon(budgetSum)}
+          <div className={styles.cardValue}>
+            <Eokwon n={budgetSum} />
           </div>
-          <div className={`${styles.cardSub} ${styles.numFont}`}>{won(budgetSum)}</div>
+          <div className={styles.cardSub}>
+            <Won n={budgetSum} />
+          </div>
         </div>
         <div className={styles.card}>
           <div className={styles.cardLabel}>지원 수 합계 (단위별)</div>
@@ -605,10 +759,7 @@ function Dashboard({
               {byUnit.map(([u, v]) => (
                 <div key={u} className={styles.unitRow}>
                   <span className={styles.unitName}>{unitLabel(u)}</span>
-                  <b className={styles.numFont}>
-                    {fmt(v)}
-                    <span className={styles.unitSuffix}>{u}</span>
-                  </b>
+                  <Num value={v} unit={u} />
                 </div>
               ))}
             </div>
@@ -622,6 +773,7 @@ function Dashboard({
       <h3 className={styles.dashH}>표준분류별 요약</h3>
       <BudgetBarChart
         data={byCategory.map((x) => ({ name: x.cat, value: x.budget }))}
+        dark={dark}
       />
       <div className={styles.tableWrap}>
         <table className={styles.table}>
@@ -638,8 +790,8 @@ function Dashboard({
                 <td>
                   <CatChip cat={x.cat === UNSET ? null : x.cat} />
                 </td>
-                <td className={`${styles.num} ${styles.numFont}`}>{fmt(x.n)}</td>
-                <td className={`${styles.num} ${styles.numFont}`}>{eokwon(x.budget)}</td>
+                <td className={styles.num}><Num value={x.n} /></td>
+                <td className={styles.num}><Eokwon n={x.budget} /></td>
               </tr>
             ))}
             {byCategory.length === 0 ? (
@@ -683,17 +835,30 @@ function Dashboard({
                 </td>
                 <td>{x.year}</td>
                 <td>{x.areaName}</td>
-                <td className={`${styles.num} ${styles.numFont}`}>{fmt(x.n)}</td>
-                <td className={`${styles.num} ${styles.numFont}`}>{won(x.mineSum)}</td>
-                <td className={`${styles.num} ${styles.numFont}`}>
-                  {x.offSum == null ? "공식치 없음" : won(x.offSum)}
+                <td className={styles.num}><Num value={x.n} /></td>
+                <td className={styles.num}><Won n={x.mineSum} /></td>
+                <td className={styles.num}>
+                  {x.offSum == null ? (
+                    <span className={styles.numDash}>공식치 없음</span>
+                  ) : (
+                    <Won n={x.offSum} />
+                  )}
                 </td>
-                <td className={`${styles.num} ${styles.numFont}`}>
-                  {x.diff == null
-                    ? "—"
-                    : `${x.diff >= 0 ? "+" : ""}${won(x.diff)}${
-                        Number.isFinite(x.pct) ? ` (${x.pct.toFixed(1)}%)` : ""
-                      }`}
+                <td className={styles.num}>
+                  {x.diff == null ? (
+                    <span className={styles.numDash}>-</span>
+                  ) : (
+                    <span className={styles.numWrap}>
+                      <span className={styles.numHi}>
+                        {(x.diff >= 0 ? "+" : "") +
+                          Number(x.diff).toLocaleString("ko-KR")}
+                      </span>
+                      <span className={styles.numUnit}>
+                        원
+                        {Number.isFinite(x.pct) ? ` (${x.pct.toFixed(1)}%)` : ""}
+                      </span>
+                    </span>
+                  )}
                 </td>
                 <td>
                   {x.offSum == null ? (
@@ -778,16 +943,16 @@ function Drawer({ row, onClose }: { row: ProgramRow; onClose: () => void }) {
             {row.period ? ` · ${row.period}` : ""}
           </dd>
           <dt>대표실적</dt>
-          <dd className={styles.numFont}>
-            {row.headline_value != null
-              ? fmt(row.headline_value) + (row.headline_unit ?? "")
-              : "—"}
+          <dd>
+            <Num value={row.headline_value} unit={row.headline_unit ?? undefined} />
           </dd>
           <dt>예산</dt>
           <dd>
-            <span className={styles.numFont}>{won(row.budget_krw)}</span>
+            <Won n={row.budget_krw} />
             {row.budget_krw != null ? (
-              <div className={`${styles.sub} ${styles.numFont}`}>{eokwon(row.budget_krw)}</div>
+              <div className={styles.sub}>
+                <Eokwon n={row.budget_krw} />
+              </div>
             ) : null}
           </dd>
           <dt>대상</dt>

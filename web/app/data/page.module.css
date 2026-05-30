@@ -10,6 +10,8 @@
   min-height: 100vh;
   background: var(--bg);
   padding-bottom: 64px;
+  /* 숫자 강조 색 (라이트=sky 계열 primary-active, 다크=sky) */
+  --num-color: var(--c-primary-active);
 }
 
 /* ── 헤더 ── */
@@ -33,8 +35,27 @@
 .brand:hover {
   text-decoration: underline;
 }
-.who {
+.headRight {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.themeBtn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: var(--c-canvas);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.themeBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.who {
   font-size: 14px;
   opacity: 0.85;
 }
@@ -248,9 +269,24 @@
 }
 .tableWrap {
   overflow-x: auto;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+/* 가로 스크롤바 항상 보이게 (모바일·데스크톱) */
+.tableWrap::-webkit-scrollbar {
+  height: 10px;
+}
+.tableWrap::-webkit-scrollbar-thumb {
+  background: var(--c-line-default);
+  border-radius: 8px;
+}
+.tableWrap::-webkit-scrollbar-track {
+  background: var(--c-line-soft);
+  border-radius: 8px;
 }
 .table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 15px;
 }
@@ -563,6 +599,62 @@
   color: var(--c-grey);
 }
 
+/* ── 숫자 강조 (볼드 + sky 계열, 단위는 일반) ── */
+.numWrap {
+  white-space: nowrap;
+}
+.numHi {
+  font-family: var(--ff-en);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--num-color);
+}
+.numUnit {
+  margin-left: 1px;
+  font-family: var(--ff);
+  font-weight: 400;
+  letter-spacing: var(--tracking);
+  color: var(--c-grey);
+  font-size: 0.9em;
+}
+.numDash {
+  color: var(--c-grey);
+}
+
+/* ── 영역(원본) 뱃지 ── */
+.areaTag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--c-light-grey);
+  color: var(--c-body);
+  white-space: nowrap;
+}
+
+/* ── 정렬 가능한 헤더 버튼 ── */
+.sortBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-grey);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sortBtn:hover {
+  color: var(--c-primary);
+}
+.sortNum {
+  width: 100%;
+  text-align: right;
+}
+
 @media (max-width: 640px) {
   .pname {
     max-width: 200px;
@@ -570,4 +662,54 @@
   .cards {
     grid-template-columns: 1fr;
   }
+}
+
+/* ============================================================
+ * 다크 모드 — /data 한정 (.page[data-theme="dark"] 스코프)
+ * 회사 토큰을 어두운 값으로 오버라이드. 분류색은 JS(catHex dark)에서.
+ * ============================================================ */
+.page[data-theme="dark"] {
+  --bg: #0a1622;
+  --card-bg: #16304d;
+  --c-canvas: #16304d;
+  --color-white: #16304d;
+  --text-main: #ecf0f3;
+  --c-ink-deep: #ecf0f3;
+  --c-body: #c7ccd1;
+  --c-grey: #9aa3ad;
+  --card-border: rgba(255, 255, 255, 0.14);
+  --c-line-soft: rgba(255, 255, 255, 0.1);
+  --c-line-default: rgba(255, 255, 255, 0.24);
+  --c-line-hover: rgba(255, 255, 255, 0.85);
+  --c-line-focus: var(--c-sky);
+  --c-light-grey: #1f3a59;
+  --num-color: var(--c-sky);
+  background: var(--bg);
+  color: var(--text-main);
+}
+/* 다크에서 basis·판정 뱃지를 어두운 배경에 맞게 (밝은 텍스트 + 투명 틴트) */
+.page[data-theme="dark"] .b_report {
+  background: rgba(88, 197, 255, 0.16);
+  color: #aed9ff;
+}
+.page[data-theme="dark"] .b_ledger {
+  background: rgba(250, 164, 26, 0.16);
+  color: #f3c98a;
+}
+.page[data-theme="dark"] .b_whitepaper {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d6dbe0;
+}
+.page[data-theme="dark"] .badgeOk {
+  background: rgba(0, 167, 117, 0.18);
+  color: #6fe0b0;
+}
+.page[data-theme="dark"] .badgeDiff {
+  background: rgba(241, 106, 38, 0.18);
+  color: #f3a07a;
+}
+.page[data-theme="dark"] .dashWarn {
+  background: rgba(250, 164, 26, 0.12);
+  border-color: rgba(250, 164, 26, 0.35);
+  color: #f3c98a;
 }
