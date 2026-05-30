@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   createContext,
+  type ReactNode,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -64,19 +65,13 @@ export type AreaSummaryRow = {
 
 const BLABEL: Record<string, string> = {
   report: "연차보고서",
-  ledger: "원장",
+  ledger: "재무결산",
   whitepaper: "백서(누적)",
 };
 
 // 일반 숫자 (상세 박스 내 세부값 등 — 문자열)
 const fmt = (n: number | null | undefined) =>
   n == null ? "—" : Number(n).toLocaleString("ko-KR");
-// 반올림 억원 (상단 요약 줄 — 문자열)
-const eokwon = (n: number | null | undefined) =>
-  n == null
-    ? "—"
-    : (Number(n) / 1e8).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
-      "억원";
 
 // 백서(2003-2022 누적)는 report_year가 2022지만 표시는 기간으로
 const yearLabel = (r: { basis: string; report_year: number | null }) =>
@@ -127,6 +122,52 @@ function CatChip({ cat }: { cat: string | null }) {
   );
 }
 
+// 현재 필터된 행을 CSV로 내보내기 (Excel 한글 대응 위해 BOM 추가)
+function downloadCsv(rows: ProgramRow[], unitColumns: string[]) {
+  const headers = [
+    "연도",
+    "기준",
+    "영역(원본)",
+    "표준분류",
+    "사업명",
+    "기간",
+    ...unitColumns.map((u) => unitLabel(u)),
+    "예산(원)",
+  ];
+  const esc = (v: unknown) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const body = rows.map((r) =>
+    [
+      yearLabel(r),
+      BLABEL[r.basis] ?? r.basis,
+      r.area_name ?? "",
+      r.category_std ?? "미분류",
+      r.program_name ?? "",
+      r.period ?? "",
+      ...unitColumns.map((u) =>
+        r.headline_unit === u && r.headline_value != null
+          ? r.headline_value
+          : ""
+      ),
+      r.budget_krw ?? "",
+    ]
+      .map(esc)
+      .join(",")
+  );
+  const csv = "﻿" + [headers.join(","), ...body].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `사업데이터_${rows.length}건.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function DataExplorer({
   programs,
   areaSummary,
@@ -139,7 +180,7 @@ export default function DataExplorer({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  const [tab, setTab] = useState<"table" | "dashboard">("table");
+  const [tab, setTab] = useState<"table" | "dashboard">("dashboard");
   const [q, setQ] = useState("");
   // 기준 다중 선택 (체크된 기준만 표시).
   // 레이어 모델: 정제 레이어=보고서(2023-2025)+백서(2003-2022), 원본 레이어=원장.
@@ -150,8 +191,16 @@ export default function DataExplorer({
   );
   const [year, setYear] = useState("");
   const [area, setArea] = useState("");
-  const [catFilter, setCatFilter] = useState("");
+  // 표준분류 필터 — 다중선택(빈 Set = 전체 표시). 대시보드에서 여러 분류 비교용.
+  const [catFilter, setCatFilter] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<ProgramRow | null>(null);
+  const toggleCat = (c: string) =>
+    setCatFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(c)) next.delete(c);
+      else next.add(c);
+      return next;
+    });
 
   // 다크 모드 (localStorage 유지)
   const [dark, setDark] = useState(false);
@@ -213,10 +262,9 @@ export default function DataExplorer({
       if (bases.size > 0 && !bases.has(r.basis)) return false;
       if (year && String(r.report_year) !== year) return false;
       if (area && r.area_name !== area) return false;
-      if (catFilter) {
-        if (catFilter === UNSET) {
-          if (r.category_std) return false;
-        } else if (r.category_std !== catFilter) return false;
+      if (catFilter.size > 0) {
+        const key = r.category_std ?? UNSET;
+        if (!catFilter.has(key)) return false;
       }
       if (query) {
         const hay = `${r.program_name ?? ""} ${r.memo ?? ""} ${(r.funders ?? [])
@@ -228,14 +276,12 @@ export default function DataExplorer({
     });
   }, [programs, q, bases, year, area, catFilter]);
 
-  const sum = rows.reduce((s, r) => s + (r.budget_krw ?? 0), 0);
-
   const resetFilters = () => {
     setQ("");
     setBases(new Set(["report", "whitepaper"]));
     setYear("");
     setArea("");
-    setCatFilter("");
+    setCatFilter(new Set());
   };
 
   // ── 다중선택 헬퍼 ──
@@ -290,37 +336,45 @@ export default function DataExplorer({
     <main className={styles.page} data-theme={dark ? "dark" : "light"}>
       <header className={styles.head}>
         <div className={`container ${styles.headRow}`}>
-          <Link href="/" className={styles.brand}>
-            ← 사업 데이터
-          </Link>
-          <div className={styles.headRight}>
-            <button
-              className={styles.themeBtn}
-              onClick={toggleDark}
-              aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-            >
-              {dark ? "☀ 라이트" : "🌙 다크"}
-            </button>
-            <span className={styles.who}>{email}</span>
-          </div>
+          <span className={styles.who}>{email}</span>
         </div>
       </header>
 
-      {/* 탭 */}
+      {/* 탭 + 테마 토글 */}
       <div className={styles.tabsWrap}>
         <div className={`container ${styles.tabs}`}>
-          <button
-            className={`${styles.tabBtn} ${tab === "table" ? styles.tabOn : ""}`}
-            onClick={() => setTab("table")}
-          >
-            표
-          </button>
-          <button
-            className={`${styles.tabBtn} ${tab === "dashboard" ? styles.tabOn : ""}`}
-            onClick={() => setTab("dashboard")}
-          >
-            대시보드
-          </button>
+          <div className={styles.tabGroup}>
+            <button
+              className={`${styles.tabBtn} ${tab === "dashboard" ? styles.tabOn : ""}`}
+              onClick={() => setTab("dashboard")}
+            >
+              대시보드
+            </button>
+            <button
+              className={`${styles.tabBtn} ${tab === "table" ? styles.tabOn : ""}`}
+              onClick={() => setTab("table")}
+            >
+              표
+            </button>
+          </div>
+          <div className={styles.themeToggle} role="group" aria-label="테마 전환">
+            <button
+              type="button"
+              className={`${styles.themeOpt} ${!dark ? styles.themeOptOn : ""}`}
+              onClick={() => dark && toggleDark()}
+              aria-pressed={!dark}
+            >
+              Light
+            </button>
+            <button
+              type="button"
+              className={`${styles.themeOpt} ${dark ? styles.themeOptOn : ""}`}
+              onClick={() => !dark && toggleDark()}
+              aria-pressed={dark}
+            >
+              Dark
+            </button>
+          </div>
         </div>
       </div>
 
@@ -351,7 +405,7 @@ export default function DataExplorer({
                 checked={bases.has("ledger")}
                 onChange={() => toggleBasis("ledger")}
               />
-              원장
+              재무결산
             </label>
             <label className={styles.basisChk}>
               <input
@@ -378,32 +432,26 @@ export default function DataExplorer({
               </option>
             ))}
           </select>
-          <select
-            className={styles.sel}
-            aria-label="표준분류 필터"
-            value={catFilter}
-            onChange={(e) => setCatFilter(e.target.value)}
-          >
-            <option value="">전체 표준분류</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
+          <span className={styles.basisGroup}>
+            <span className={styles.basisLabel}>표준분류</span>
+            {[...CATEGORIES, UNSET].map((c) => (
+              <label key={c} className={styles.basisChk}>
+                <input
+                  type="checkbox"
+                  checked={catFilter.has(c)}
+                  onChange={() => toggleCat(c)}
+                />
                 {c}
-              </option>
+              </label>
             ))}
-            <option value={UNSET}>{UNSET}</option>
-          </select>
+          </span>
           <button className={styles.reset} onClick={resetFilters}>
             필터 초기화
           </button>
         </div>
 
-        {tab === "table" ? (
+        {tab === "table" && (picked.size > 0 || msg) ? (
           <div className={`container ${styles.toolbar}`}>
-            <p className={styles.count}>
-              <b>{fmt(rows.length)}</b>개 사업 · 예산 합계{" "}
-              <b className={styles.num}>{eokwon(sum)}</b>{" "}
-              <span className={styles.muted}>— 기준·단위가 섞이면 단순 합계는 참고용</span>
-            </p>
             {picked.size > 0 ? (
               <div className={styles.tagBar}>
                 <span className={styles.tagBarCount}>
@@ -451,6 +499,7 @@ export default function DataExplorer({
         <Dashboard
           rows={rows}
           areaSummary={areaSummary}
+          unitColumns={unitColumns}
           bothReportLedger={bases.has("report") && bases.has("ledger")}
           dark={dark}
         />
@@ -461,6 +510,55 @@ export default function DataExplorer({
       ) : null}
     </main>
     </DarkCtx.Provider>
+  );
+}
+
+// 가로 스크롤 영역 — 상단에 본문 표와 동기화된 스크롤바를 둔다(하단 안 보임 해결).
+function HScroll({ children, label }: { children: ReactNode; label: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  const [scrollW, setScrollW] = useState(0);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const update = () => setScrollW(el.scrollWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    // 표 내용 폭 변화(컬럼/행 변동)는 wrap의 border-box를 안 바꾸므로 table도 관찰
+    const tableEl = el.firstElementChild;
+    if (tableEl) ro.observe(tableEl);
+    return () => ro.disconnect();
+  }, []);
+  const syncFromTop = () => {
+    if (wrapRef.current && topRef.current)
+      wrapRef.current.scrollLeft = topRef.current.scrollLeft;
+  };
+  const syncFromWrap = () => {
+    if (wrapRef.current && topRef.current)
+      topRef.current.scrollLeft = wrapRef.current.scrollLeft;
+  };
+  return (
+    <>
+      <div
+        className={styles.topScroll}
+        ref={topRef}
+        onScroll={syncFromTop}
+        aria-hidden
+      >
+        <div className={styles.topScrollInner} style={{ width: scrollW }} />
+      </div>
+      <div
+        className={styles.tableWrap}
+        ref={wrapRef}
+        onScroll={syncFromWrap}
+        role="region"
+        aria-label={label}
+        tabIndex={0}
+      >
+        {children}
+      </div>
+    </>
   );
 }
 
@@ -491,8 +589,15 @@ function TableView({
         ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
         : { key, dir: "asc" }
     );
-  const caret = (key: string) =>
-    sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
+  // 정렬 가능 컬럼은 기본으로 ↕ 표시(눌러야 보이는 문제 해결), 활성 시 ▲/▼
+  const sortInd = (key: string) => (
+    <span
+      className={sort.key === key ? styles.sortOn : styles.sortIdle}
+      aria-hidden
+    >
+      {sort.key === key ? (sort.dir === "asc" ? "▲" : "▼") : "↕"}
+    </span>
+  );
   const ariaSort = (key: string): "ascending" | "descending" | "none" =>
     sort.key === key ? (sort.dir === "asc" ? "ascending" : "descending") : "none";
 
@@ -520,14 +625,149 @@ function TableView({
     });
   }, [rows, sort]);
 
+  const budgetSum = rows.reduce((s, r) => s + (r.budget_krw ?? 0), 0);
+
+  // ── 컬럼 정의 + 순서 변경(좌/우 이동, localStorage 저장) ──
+  type ColDef = {
+    id: string;
+    header: string;
+    sortKey?: string;
+    num?: boolean;
+    render: (r: ProgramRow) => ReactNode;
+  };
+  const cols = useMemo<ColDef[]>(
+    () => [
+      { id: "year", header: "연도", render: (r) => yearLabel(r) },
+      {
+        id: "basis",
+        header: "기준",
+        render: (r) => (
+          <span className={`${styles.tag} ${styles["b_" + r.basis]}`}>
+            {BLABEL[r.basis]}
+          </span>
+        ),
+      },
+      {
+        id: "area",
+        header: "영역(원본)",
+        render: (r) =>
+          r.area_name ? (
+            <span className={styles.areaTag}>{r.area_name}</span>
+          ) : (
+            <span className={styles.unsetText}>—</span>
+          ),
+      },
+      {
+        id: "category",
+        header: "표준분류",
+        render: (r) => <CatChip cat={r.category_std} />,
+      },
+      {
+        id: "name",
+        header: "사업명",
+        sortKey: "name",
+        render: (r) => (
+          <>
+            <div className={styles.pname}>{r.program_name}</div>
+            {r.period ? <div className={styles.sub}>{r.period}</div> : null}
+          </>
+        ),
+      },
+      {
+        id: "budget",
+        header: "예산",
+        sortKey: "budget",
+        num: true,
+        render: (r) => <Won n={r.budget_krw} />,
+      },
+      ...unitColumns.map(
+        (u): ColDef => ({
+          id: `unit:${u}`,
+          header: unitLabel(u),
+          sortKey: `unit:${u}`,
+          num: true,
+          render: (r) =>
+            r.headline_unit === u && r.headline_value != null ? (
+              <Num value={r.headline_value} />
+            ) : (
+              <span className={styles.numDash}>-</span>
+            ),
+        })
+      ),
+    ],
+    [unitColumns]
+  );
+
+  const [order, setOrder] = useState<string[]>(() => cols.map((c) => c.id));
+  // 저장된 순서 불러오기 + 현재 컬럼과 reconcile (없어진 단위 id 제거, 새 id 추가)
+  useEffect(() => {
+    const avail = cols.map((c) => c.id);
+    let stored: string[] = [];
+    try {
+      stored = JSON.parse(localStorage.getItem("data-colorder") || "[]");
+    } catch {}
+    setOrder([
+      ...stored.filter((id) => avail.includes(id)),
+      ...avail.filter((id) => !stored.includes(id)),
+    ]);
+  }, [cols]);
+
+  const moveCol = (id: string, dir: -1 | 1) =>
+    setOrder((prev) => {
+      const i = prev.indexOf(id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      try {
+        localStorage.setItem("data-colorder", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+  const colMap = new Map(cols.map((c) => [c.id, c]));
+  const orderedCols = order
+    .map((id) => colMap.get(id))
+    .filter((c): c is ColDef => !!c);
+
   return (
     <div className={`container ${styles.tablePane}`}>
-      <div
-        className={styles.tableWrap}
-        role="region"
-        aria-label="사업 데이터 표 (좌우 스크롤 가능)"
-        tabIndex={0}
-      >
+      {/* 표 위 캡션 — 사업 수 · 예산 합계 (테이블 위에 떠 있는 느낌) */}
+      <div className={styles.tableCap}>
+        <div className={styles.statStrip}>
+          <div className={styles.stat}>
+            <span className={styles.statLabel}>사업 수</span>
+            <span className={styles.statNum}>
+              {fmt(rows.length)}
+              <span className={styles.statUnit}>개</span>
+            </span>
+          </div>
+          <span className={styles.statDiv} aria-hidden />
+          <div className={styles.stat}>
+            <span className={styles.statLabel}>예산 합계</span>
+            <span className={styles.statNum}>
+              {(budgetSum / 1e8).toLocaleString("ko-KR", {
+                maximumFractionDigits: 1,
+              })}
+              <span className={styles.statUnit}>억원</span>
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          className={styles.csvBtn}
+          onClick={() => downloadCsv(sorted, unitColumns)}
+          disabled={rows.length === 0}
+        >
+          ↓ CSV 다운로드
+        </button>
+      </div>
+      <p className={styles.statNote}>
+        기준·단위가 섞이면 단순 합계는 참고용 — 정확한 합계는 기준을 하나만
+        선택하세요.
+      </p>
+
+      <HScroll label="사업 데이터 표 (좌우 스크롤 가능)">
         <table className={styles.table}>
           <thead>
             <tr>
@@ -539,35 +779,51 @@ function TableView({
                   aria-label="전체 선택"
                 />
               </th>
-              <th>연도</th>
-              <th>기준</th>
-              <th>영역(원본)</th>
-              <th>표준분류</th>
-              <th aria-sort={ariaSort("name")}>
-                <button type="button" className={styles.sortBtn} onClick={() => onSort("name")}>
-                  사업명{caret("name")}
-                </button>
-              </th>
-              {unitColumns.map((u) => (
-                <th key={u} className={styles.num} aria-sort={ariaSort(`unit:${u}`)}>
-                  <button
-                    type="button"
-                    className={`${styles.sortBtn} ${styles.sortNum}`}
-                    onClick={() => onSort(`unit:${u}`)}
+              {orderedCols.map((c, idx) => (
+                <th
+                  key={c.id}
+                  className={c.num ? styles.num : undefined}
+                  aria-sort={c.sortKey ? ariaSort(c.sortKey) : undefined}
+                >
+                  <div
+                    className={`${styles.colHead} ${c.num ? styles.colHeadNum : ""}`}
                   >
-                    {unitLabel(u)}{caret(`unit:${u}`)}
-                  </button>
+                    {c.sortKey ? (
+                      <button
+                        type="button"
+                        className={styles.sortBtn}
+                        onClick={() => onSort(c.sortKey!)}
+                      >
+                        {c.header} {sortInd(c.sortKey)}
+                      </button>
+                    ) : (
+                      <span className={styles.colTitle}>{c.header}</span>
+                    )}
+                    <span className={styles.colMove}>
+                      <button
+                        type="button"
+                        className={styles.moveBtn}
+                        onClick={() => moveCol(c.id, -1)}
+                        disabled={idx === 0}
+                        aria-label={`${c.header} 열 왼쪽으로`}
+                        title="왼쪽으로 이동"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.moveBtn}
+                        onClick={() => moveCol(c.id, 1)}
+                        disabled={idx === orderedCols.length - 1}
+                        aria-label={`${c.header} 열 오른쪽으로`}
+                        title="오른쪽으로 이동"
+                      >
+                        ›
+                      </button>
+                    </span>
+                  </div>
                 </th>
               ))}
-              <th className={styles.num} aria-sort={ariaSort("budget")}>
-                <button
-                  type="button"
-                  className={`${styles.sortBtn} ${styles.sortNum}`}
-                  onClick={() => onSort("budget")}
-                >
-                  예산{caret("budget")}
-                </button>
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -594,44 +850,21 @@ function TableView({
                       aria-label="선택"
                     />
                   </td>
-                  <td onClick={() => onSelect(r)}>{yearLabel(r)}</td>
-                  <td onClick={() => onSelect(r)}>
-                    <span className={`${styles.tag} ${styles["b_" + r.basis]}`}>
-                      {BLABEL[r.basis]}
-                    </span>
-                  </td>
-                  <td onClick={() => onSelect(r)}>
-                    {r.area_name ? (
-                      <span className={styles.areaTag}>{r.area_name}</span>
-                    ) : (
-                      <span className={styles.unsetText}>—</span>
-                    )}
-                  </td>
-                  <td onClick={() => onSelect(r)}>
-                    <CatChip cat={r.category_std} />
-                  </td>
-                  <td onClick={() => onSelect(r)}>
-                    <div className={styles.pname}>{r.program_name}</div>
-                    {r.period ? <div className={styles.sub}>{r.period}</div> : null}
-                  </td>
-                  {unitColumns.map((u) => (
-                    <td key={u} className={styles.num} onClick={() => onSelect(r)}>
-                      {r.headline_unit === u && r.headline_value != null ? (
-                        <Num value={r.headline_value} />
-                      ) : (
-                        <span className={styles.numDash}>-</span>
-                      )}
+                  {orderedCols.map((c) => (
+                    <td
+                      key={c.id}
+                      className={c.num ? styles.num : undefined}
+                      onClick={() => onSelect(r)}
+                    >
+                      {c.render(r)}
                     </td>
                   ))}
-                  <td className={styles.num} onClick={() => onSelect(r)}>
-                    <Won n={r.budget_krw} />
-                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-      </div>
+      </HScroll>
     </div>
   );
 }
@@ -639,11 +872,13 @@ function TableView({
 function Dashboard({
   rows,
   areaSummary,
+  unitColumns,
   bothReportLedger,
   dark,
 }: {
   rows: ProgramRow[];
   areaSummary: AreaSummaryRow[];
+  unitColumns: string[];
   bothReportLedger: boolean;
   dark: boolean;
 }) {
@@ -659,18 +894,25 @@ function Dashboard({
 
   const budgetSum = rows.reduce((s, r) => s + (r.budget_krw ?? 0), 0);
 
-  // 표준분류별 요약 (현재 필터 기준)
+  // 표준분류별 요약 (현재 필터 기준) — 지원수는 단위별로 분리 집계
   const byCategory = useMemo(() => {
-    const m = new Map<string, { n: number; budget: number }>();
+    const m = new Map<
+      string,
+      { n: number; budget: number; units: Record<string, number> }
+    >();
     for (const r of rows) {
       const key = r.category_std ?? UNSET;
-      const cur = m.get(key) ?? { n: 0, budget: 0 };
+      const cur = m.get(key) ?? { n: 0, budget: 0, units: {} };
       cur.n += 1;
       cur.budget += r.budget_krw ?? 0;
+      if (r.headline_unit && r.headline_value != null) {
+        cur.units[r.headline_unit] =
+          (cur.units[r.headline_unit] ?? 0) + r.headline_value;
+      }
       m.set(key, cur);
     }
     return [...CATEGORIES, UNSET]
-      .map((c) => ({ cat: c, ...(m.get(c) ?? { n: 0, budget: 0 }) }))
+      .map((c) => ({ cat: c, ...(m.get(c) ?? { n: 0, budget: 0, units: {} }) }))
       .filter((x) => x.n > 0);
   }, [rows]);
 
@@ -697,16 +939,6 @@ function Dashboard({
         const [b, y, ac] = k.split("|");
         const m = mine.get(k);
         const o = official.get(k);
-        const mineSum = m?.sum ?? null;
-        const offSum = o?.budget_krw ?? null;
-        const diff =
-          mineSum != null && offSum != null ? mineSum - offSum : null;
-        const pct =
-          diff != null && offSum
-            ? (diff / offSum) * 100
-            : diff != null && offSum === 0 && diff !== 0
-            ? Infinity
-            : 0;
         return {
           key: k,
           basis: b,
@@ -714,15 +946,11 @@ function Dashboard({
           areaCode: ac,
           areaName: m?.row.area_name ?? o?.area_name ?? ac,
           n: m?.n ?? 0,
-          mineSum,
-          offSum,
-          diff,
-          pct,
-          match: diff != null && Math.abs(pct) <= 1,
+          offSum: o?.budget_krw ?? null,
         };
       })
-      // 현재 필터 그룹에 속한 키만 (내 합계가 있는 것) — 필터 반영
-      .filter((x) => x.mineSum != null)
+      // 공식 합계가 명시된 그룹만 표시 (세부 사업 합산·차이는 데이터 보완 후 제공)
+      .filter((x) => x.offSum != null)
       .sort((a, b) => a.basis.localeCompare(b.basis) || b.year.localeCompare(a.year) || a.areaCode.localeCompare(b.areaCode));
   }, [rows, areaSummary]);
 
@@ -730,14 +958,14 @@ function Dashboard({
     <div className={`container ${styles.dash}`}>
       {bothReportLedger ? (
         <p className={styles.dashWarn}>
-          ⚠ 연차보고서와 원장을 함께 선택했습니다. 둘은 같은 활동의 두 기록(원장=재무결산
-          원본, 연차보고서=정제본)이라 합계가 <b>이중계상</b>됩니다. 정확한 합계를 보려면
+          ⚠ 연차보고서와 재무결산을 함께 선택했습니다. 둘은 같은 활동의 두 기록(재무결산=원본
+          장부, 연차보고서=정제본)이라 합계가 <b>이중계상</b>됩니다. 정확한 합계를 보려면
           기준에서 하나만 선택하세요.
         </p>
       ) : (
         <p className={styles.dashNote}>
           정제 레이어(연차보고서 2023–2025 + 백서 2003–2022)를 합산 중입니다 — 둘은 같은
-          레이어라 연도가 겹치지 않아 함께 더하면 2003–2025 전체 흐름이 됩니다. 원장은
+          레이어라 연도가 겹치지 않아 함께 더하면 2003–2025 전체 흐름이 됩니다. 재무결산은
           같은 기간을 정제 전 원본으로 적은 별도 레이어라, 연차보고서와 함께 더하면 중복됩니다.
         </p>
       )}
@@ -766,7 +994,10 @@ function Dashboard({
               {byUnit.map(([u, v]) => (
                 <div key={u} className={styles.unitRow}>
                   <span className={styles.unitName}>{unitLabel(u)}</span>
-                  <Num value={v} unit={u} />
+                  <span className={styles.unitVal}>
+                    {Number(v).toLocaleString("ko-KR")}
+                  </span>
+                  <span className={styles.unitU}>{u}</span>
                 </div>
               ))}
             </div>
@@ -782,17 +1013,17 @@ function Dashboard({
         data={byCategory.map((x) => ({ name: x.cat, value: x.budget }))}
         dark={dark}
       />
-      <div
-        className={styles.tableWrap}
-        role="region"
-        aria-label="표준분류별 요약 표 (좌우 스크롤 가능)"
-        tabIndex={0}
-      >
-        <table className={styles.table}>
+      <HScroll label="표준분류별 요약 표 (좌우 스크롤 가능)">
+        <table className={`${styles.table} ${styles.leftTable}`}>
           <thead>
             <tr>
               <th>표준분류</th>
               <th className={styles.num}>사업 수</th>
+              {unitColumns.map((u) => (
+                <th key={u} className={styles.num}>
+                  {unitLabel(u)}
+                </th>
+              ))}
               <th className={styles.num}>예산</th>
             </tr>
           </thead>
@@ -803,32 +1034,37 @@ function Dashboard({
                   <CatChip cat={x.cat === UNSET ? null : x.cat} />
                 </td>
                 <td className={styles.num}><Num value={x.n} /></td>
+                {unitColumns.map((u) => (
+                  <td key={u} className={styles.num}>
+                    {x.units[u] != null ? (
+                      <Num value={x.units[u]} unit={u} />
+                    ) : (
+                      <span className={styles.numDash}>-</span>
+                    )}
+                  </td>
+                ))}
                 <td className={styles.num}><Eokwon n={x.budget} /></td>
               </tr>
             ))}
             {byCategory.length === 0 ? (
               <tr>
-                <td colSpan={3} className={styles.sub}>
+                <td colSpan={3 + unitColumns.length} className={styles.sub}>
                   표시할 사업이 없습니다.
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
-      </div>
+      </HScroll>
 
-      {/* 대조: 내 합계 vs 공식 합계 */}
-      <h3 className={styles.dashH}>내 합계 vs 공식 합계 (area_summary)</h3>
+      {/* 사업 결과 데이터 — 보고서 공식 영역별 총액 */}
+      <h3 className={styles.dashH}>사업 결과 데이터</h3>
       <p className={styles.muted}>
-        현재 필터로 묶인 사업들의 예산 합을 보고서가 명시한 영역별 공식 합계와 대조합니다.
-        차이 ±1% 이내면 일치로 봅니다.
+        각 보고서(연차보고서·재무결산)가 명시한 <b>영역별 공식 총 사업비</b>입니다.
+        세부 사업별 데이터가 아직 완전하지 않아 개별 합산·차이 대조는 데이터 보완 후
+        제공할 예정입니다.
       </p>
-      <div
-        className={styles.tableWrap}
-        role="region"
-        aria-label="내 합계 vs 공식 합계 표 (좌우 스크롤 가능)"
-        tabIndex={0}
-      >
+      <HScroll label="사업 결과 데이터 표 (좌우 스크롤 가능)">
         <table className={styles.table}>
           <thead>
             <tr>
@@ -836,10 +1072,7 @@ function Dashboard({
               <th>연도</th>
               <th>영역</th>
               <th className={styles.num}>사업수</th>
-              <th className={styles.num}>내 합계(원)</th>
-              <th className={styles.num}>공식 합계(원)</th>
-              <th className={styles.num}>차이</th>
-              <th>판정</th>
+              <th className={styles.num}>공식 데이터 합계</th>
             </tr>
           </thead>
           <tbody>
@@ -853,51 +1086,19 @@ function Dashboard({
                 <td>{x.year}</td>
                 <td>{x.areaName}</td>
                 <td className={styles.num}><Num value={x.n} /></td>
-                <td className={styles.num}><Won n={x.mineSum} /></td>
-                <td className={styles.num}>
-                  {x.offSum == null ? (
-                    <span className={styles.numDash}>공식치 없음</span>
-                  ) : (
-                    <Won n={x.offSum} />
-                  )}
-                </td>
-                <td className={styles.num}>
-                  {x.diff == null ? (
-                    <span className={styles.numDash}>-</span>
-                  ) : (
-                    <span className={styles.numWrap}>
-                      <span className={styles.numHi}>
-                        {(x.diff >= 0 ? "+" : "") +
-                          Number(x.diff).toLocaleString("ko-KR")}
-                      </span>
-                      <span className={styles.numUnit}>
-                        원
-                        {Number.isFinite(x.pct) ? ` (${x.pct.toFixed(1)}%)` : ""}
-                      </span>
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {x.offSum == null ? (
-                    <span className={styles.badgeNa}>대조불가</span>
-                  ) : x.match ? (
-                    <span className={styles.badgeOk}>일치</span>
-                  ) : (
-                    <span className={styles.badgeDiff}>차이</span>
-                  )}
-                </td>
+                <td className={styles.num}><Won n={x.offSum} /></td>
               </tr>
             ))}
             {recon.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.sub}>
-                  대조할 그룹이 없습니다. (필터를 조정하거나 백서 외 데이터를 선택하세요)
+                <td colSpan={5} className={styles.sub}>
+                  표시할 공식 합계가 없습니다. (필터를 조정하거나 백서 외 데이터를 선택하세요)
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
-      </div>
+      </HScroll>
     </div>
   );
 }

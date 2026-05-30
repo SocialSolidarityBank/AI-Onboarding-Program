@@ -110,7 +110,7 @@ export default function BudgetBarChart({
             cursor={{ fill: cursorFill }}
             content={<ChartTooltip dark={dark} />}
           />
-          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
+          <Bar dataKey="value" radius={0} barSize={24}>
             {data.map((d) => (
               <Cell key={d.name} fill={catHex(d.name, dark)} />
             ))}
