@@ -782,7 +782,12 @@ function Dashboard({
         data={byCategory.map((x) => ({ name: x.cat, value: x.budget }))}
         dark={dark}
       />
-      <div className={styles.tableWrap}>
+      <div
+        className={styles.tableWrap}
+        role="region"
+        aria-label="표준분류별 요약 표 (좌우 스크롤 가능)"
+        tabIndex={0}
+      >
         <table className={styles.table}>
           <thead>
             <tr>
@@ -818,7 +823,12 @@ function Dashboard({
         현재 필터로 묶인 사업들의 예산 합을 보고서가 명시한 영역별 공식 합계와 대조합니다.
         차이 ±1% 이내면 일치로 봅니다.
       </p>
-      <div className={styles.tableWrap}>
+      <div
+        className={styles.tableWrap}
+        role="region"
+        aria-label="내 합계 vs 공식 합계 표 (좌우 스크롤 가능)"
+        tabIndex={0}
+      >
         <table className={styles.table}>
           <thead>
             <tr>

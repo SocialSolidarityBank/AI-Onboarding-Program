@@ -727,6 +727,9 @@
 .page[data-theme="dark"] .badgeNa {
   color: #c3ccd6;
 }
+.page[data-theme="dark"] .msg {
+  color: var(--c-sky);
+}
 .page[data-theme="dark"] .dashWarn {
   background: rgba(250, 164, 26, 0.14);
   border-color: rgba(250, 164, 26, 0.35);
