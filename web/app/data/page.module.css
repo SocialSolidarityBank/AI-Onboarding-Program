@@ -10,14 +10,14 @@
   min-height: 100vh;
   background: var(--bg);
   padding-bottom: 64px;
-  /* 숫자 강조 색 (라이트=sky 계열 primary-active, 다크=sky) */
-  --num-color: var(--c-primary-active);
+  /* 숫자 강조 색 (라이트=primary 파랑 AA확보, 다크=sky) */
+  --num-color: var(--c-primary);
 }
 
 /* ── 헤더 ── */
 .head {
   background: var(--c-dark-blue);
-  color: var(--c-canvas);
+  color: #fff;
 }
 .headRow {
   display: flex;
@@ -27,7 +27,7 @@
   padding-bottom: 14px;
 }
 .brand {
-  color: var(--c-canvas);
+  color: #fff;
   font-weight: 700;
   font-size: 16px;
   text-decoration: none;
@@ -47,7 +47,7 @@
   border-radius: var(--r-pill);
   border: 1px solid rgba(255, 255, 255, 0.4);
   background: transparent;
-  color: var(--c-canvas);
+  color: #fff;
   font: inherit;
   font-size: 13px;
   cursor: pointer;
@@ -243,7 +243,7 @@
   border: none;
   border-radius: var(--r-md);
   background: var(--c-primary);
-  color: var(--c-canvas);
+  color: #fff;
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -271,6 +271,12 @@
   overflow-x: auto;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--c-line-default) var(--c-line-soft);
+}
+.tableWrap:focus-visible {
+  outline: 2px solid var(--c-line-focus);
+  outline-offset: 2px;
 }
 /* 가로 스크롤바 항상 보이게 (모바일·데스크톱) */
 .tableWrap::-webkit-scrollbar {
@@ -668,48 +674,61 @@
  * 다크 모드 — /data 한정 (.page[data-theme="dark"] 스코프)
  * 회사 토큰을 어두운 값으로 오버라이드. 분류색은 JS(catHex dark)에서.
  * ============================================================ */
+/* 다크에서 글자색은 white / sky-blue / light-blue / light-grey 만 사용 (사용자 규칙).
+ * 상태 구분은 배경 틴트로, 텍스트는 항상 밝게. */
 .page[data-theme="dark"] {
   --bg: #0a1622;
   --card-bg: #16304d;
   --c-canvas: #16304d;
   --color-white: #16304d;
-  --text-main: #ecf0f3;
-  --c-ink-deep: #ecf0f3;
-  --c-body: #c7ccd1;
-  --c-grey: #9aa3ad;
+  --text-main: #ffffff; /* white */
+  --c-ink-deep: #ffffff; /* white */
+  --c-body: #ecf0f3; /* light-grey */
+  --c-grey: #c3ccd6; /* light-grey(약간 dim) — muted도 밝게 */
   --card-border: rgba(255, 255, 255, 0.14);
   --c-line-soft: rgba(255, 255, 255, 0.1);
   --c-line-default: rgba(255, 255, 255, 0.24);
   --c-line-hover: rgba(255, 255, 255, 0.85);
   --c-line-focus: var(--c-sky);
-  --c-light-grey: #1f3a59;
-  --num-color: var(--c-sky);
+  --c-light-grey: #1f3a59; /* 다크 surface 틴트(배경용) */
+  --num-color: var(--c-sky); /* sky-blue */
   background: var(--bg);
   color: var(--text-main);
 }
-/* 다크에서 basis·판정 뱃지를 어두운 배경에 맞게 (밝은 텍스트 + 투명 틴트) */
+/* 활성 탭·정렬 hover — 다크에선 sky */
+.page[data-theme="dark"] .tabOn {
+  color: var(--c-sky);
+  border-bottom-color: var(--c-sky);
+}
+.page[data-theme="dark"] .sortBtn:hover {
+  color: var(--c-sky);
+}
+/* basis·판정 뱃지: 배경 틴트로 구분, 글자는 밝게(light-blue/light-grey) */
 .page[data-theme="dark"] .b_report {
-  background: rgba(88, 197, 255, 0.16);
-  color: #aed9ff;
+  background: rgba(88, 197, 255, 0.18);
+  color: #cdeaff; /* light-blue */
 }
 .page[data-theme="dark"] .b_ledger {
-  background: rgba(250, 164, 26, 0.16);
-  color: #f3c98a;
+  background: rgba(250, 164, 26, 0.18);
+  color: #ecf0f3; /* light-grey */
 }
 .page[data-theme="dark"] .b_whitepaper {
-  background: rgba(255, 255, 255, 0.1);
-  color: #d6dbe0;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ecf0f3;
 }
 .page[data-theme="dark"] .badgeOk {
-  background: rgba(0, 167, 117, 0.18);
-  color: #6fe0b0;
+  background: rgba(0, 167, 117, 0.22);
+  color: #ecf0f3;
 }
 .page[data-theme="dark"] .badgeDiff {
-  background: rgba(241, 106, 38, 0.18);
-  color: #f3a07a;
+  background: rgba(241, 106, 38, 0.22);
+  color: #ecf0f3;
+}
+.page[data-theme="dark"] .badgeNa {
+  color: #c3ccd6;
 }
 .page[data-theme="dark"] .dashWarn {
-  background: rgba(250, 164, 26, 0.12);
+  background: rgba(250, 164, 26, 0.14);
   border-color: rgba(250, 164, 26, 0.35);
-  color: #f3c98a;
+  color: #ecf0f3;
 }

@@ -258,8 +258,8 @@ export default function DataExplorer({
     });
 
   const runSetCategory = () => {
-    // 버그 수정: 선택 키를 필터된 rows가 아니라 전체 programs에서 추출.
-    // (필터를 바꿔 화면에서 사라진 선택도 누락 없이 저장)
+    // 선택 키는 필터된 rows가 아니라 전체 programs에서 추출
+    // (필터를 바꿔 화면에서 사라진 선택도 누락 없이 저장).
     const keys = programs
       .filter((r) => picked.has(keyOf(r)))
       .map((r) => ({ id: r.program_id, basis: r.basis }));
@@ -343,7 +343,7 @@ export default function DataExplorer({
                 checked={bases.has("report")}
                 onChange={() => toggleBasis("report")}
               />
-              보고서
+              연차보고서
             </label>
             <label className={styles.basisChk}>
               <input
@@ -493,6 +493,8 @@ function TableView({
     );
   const caret = (key: string) =>
     sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
+  const ariaSort = (key: string): "ascending" | "descending" | "none" =>
+    sort.key === key ? (sort.dir === "asc" ? "ascending" : "descending") : "none";
 
   const sorted = useMemo(() => {
     if (!sort.key) return rows;
@@ -520,7 +522,12 @@ function TableView({
 
   return (
     <div className={`container ${styles.tablePane}`}>
-      <div className={styles.tableWrap}>
+      <div
+        className={styles.tableWrap}
+        role="region"
+        aria-label="사업 데이터 표 (좌우 스크롤 가능)"
+        tabIndex={0}
+      >
         <table className={styles.table}>
           <thead>
             <tr>
@@ -536,13 +543,13 @@ function TableView({
               <th>기준</th>
               <th>영역(원본)</th>
               <th>표준분류</th>
-              <th>
+              <th aria-sort={ariaSort("name")}>
                 <button type="button" className={styles.sortBtn} onClick={() => onSort("name")}>
                   사업명{caret("name")}
                 </button>
               </th>
               {unitColumns.map((u) => (
-                <th key={u} className={styles.num}>
+                <th key={u} className={styles.num} aria-sort={ariaSort(`unit:${u}`)}>
                   <button
                     type="button"
                     className={`${styles.sortBtn} ${styles.sortNum}`}
@@ -552,7 +559,7 @@ function TableView({
                   </button>
                 </th>
               ))}
-              <th className={styles.num}>
+              <th className={styles.num} aria-sort={ariaSort("budget")}>
                 <button
                   type="button"
                   className={`${styles.sortBtn} ${styles.sortNum}`}
@@ -723,15 +730,15 @@ function Dashboard({
     <div className={`container ${styles.dash}`}>
       {bothReportLedger ? (
         <p className={styles.dashWarn}>
-          ⚠ 보고서와 원장을 함께 선택했습니다. 둘은 같은 활동의 두 기록(원장=재무결산
-          원본, 보고서=정제본)이라 합계가 <b>이중계상</b>됩니다. 정확한 합계를 보려면
+          ⚠ 연차보고서와 원장을 함께 선택했습니다. 둘은 같은 활동의 두 기록(원장=재무결산
+          원본, 연차보고서=정제본)이라 합계가 <b>이중계상</b>됩니다. 정확한 합계를 보려면
           기준에서 하나만 선택하세요.
         </p>
       ) : (
         <p className={styles.dashNote}>
-          정제 레이어(보고서 2023–2025 + 백서 2003–2022)를 합산 중입니다 — 둘은 같은
+          정제 레이어(연차보고서 2023–2025 + 백서 2003–2022)를 합산 중입니다 — 둘은 같은
           레이어라 연도가 겹치지 않아 함께 더하면 2003–2025 전체 흐름이 됩니다. 원장은
-          같은 기간을 정제 전 원본으로 적은 별도 레이어라, 보고서와 함께 더하면 중복됩니다.
+          같은 기간을 정제 전 원본으로 적은 별도 레이어라, 연차보고서와 함께 더하면 중복됩니다.
         </p>
       )}
 
