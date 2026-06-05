@@ -1,0 +1,7 @@
+/* Tailwind v4 — preflight(전역 리셋) 제외하고 theme + utilities 만 로드.
+ * 기존 CSS Modules 페이지(/, /apply, /data)의 스타일을 건드리지 않기 위함.
+ * Tremor Raw 차트 컴포넌트가 쓰는 유틸리티 클래스만 제공한다. */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);

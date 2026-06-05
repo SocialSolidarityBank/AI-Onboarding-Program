@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./_v2/tokens.css";
+import "./tailwind.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,6 +21,11 @@ export default function RootLayout({
           rel="stylesheet"
           as="style"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
+        />
+        {/* Satoshi — 숫자 강조용 (--ff-en). Fontshare CDN */}
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=satoshi@500,600,700,400&display=swap"
         />
       </head>
       <body>{children}</body>
