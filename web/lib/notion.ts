@@ -41,6 +41,21 @@ function trimToLimit(value: string, limit: number = NOTION_TEXT_LIMIT): string {
   return value.slice(0, limit - 1) + "…";
 }
 
+// 신청 시각(UTC)을 한국 표준시(KST, 항상 UTC+9, DST 없음) 오프셋 표기로 변환.
+// 같은 순간을 +09:00 로 표기해 Notion 이 KST 벽시계로 표시하도록 한다.
+function toKstIso(utcIso: string): string {
+  const ms = new Date(utcIso).getTime();
+  if (Number.isNaN(ms)) return utcIso;
+  return new Date(ms + 9 * 60 * 60 * 1000).toISOString().replace("Z", "+09:00");
+}
+
+// Notion multi_select 옵션명은 쉼표를 허용하지 않는다(쉼표 포함 시 속성 거부 →
+// 해당 row 전체 동기화 실패). 학습목표 등 문구의 쉼표를 한국어 나열 기호 '·' 로
+// 치환해 multi_select 로 안전하게 보존한다. 화면 폼 문구는 원본을 유지한다.
+function toMultiSelectName(value: string): { name: string } {
+  return { name: value.replace(/\s*,\s*/g, "·") };
+}
+
 function buildProperties(row: SyncRow): Record<string, unknown> {
   // 사용 툴 multi_select 에는 체크박스로 고른 옵션만 (기타 자유입력은 별도 컬럼).
   const toolList = row.tools.filter((t) => t !== "기타");
@@ -51,16 +66,17 @@ function buildProperties(row: SyncRow): Record<string, unknown> {
     이메일: { email: row.email },
     소속: row.team ? { select: { name: row.team } } : { select: null },
     "신청 과정": {
-      multi_select: row.programTitles.map((name) => ({ name })),
+      multi_select: row.programTitles.map(toMultiSelectName),
     },
+    // 학습목표 문구의 쉼표는 toMultiSelectName 에서 '·' 로 치환된다.
     "학습 목표": {
-      multi_select: row.learningGoals.map((name) => ({ name })),
+      multi_select: row.learningGoals.map(toMultiSelectName),
     },
     "참여 가능 요일": {
-      multi_select: row.availableDays.map((name) => ({ name })),
+      multi_select: row.availableDays.map(toMultiSelectName),
     },
     "사용 툴": {
-      multi_select: toolList.map((name) => ({ name })),
+      multi_select: toolList.map(toMultiSelectName),
     },
     "기타 도구": {
       rich_text: row.toolsOther
@@ -83,7 +99,7 @@ function buildProperties(row: SyncRow): Record<string, unknown> {
         : [],
     },
     신청일시: {
-      date: { start: row.createdAt },
+      date: { start: toKstIso(row.createdAt) },
     },
   };
 }
